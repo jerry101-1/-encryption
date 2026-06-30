@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>智慧隨機加解密工具</title>
+    <title>智慧隨機加解密工具 (支援數字版)</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -58,16 +58,17 @@
 </head>
 <body>
 
-    <h2>加解密工具</h2>
+    <h2>🔐 智慧隨機加解密工具 (支援數字版)</h2>
 
     <div class="info-box">
-        🎲 <b>全自動隨機機制：</b><br>
-        每次加密都會隨機抽樣不同的排序演算法；解密時系統會自動辨識密文前綴，無須手動設定。
+        🎲 <b>全自動隨機機制 (6-bit 升級版)：</b><br>
+        • 現在支援：英文 <code>a-z</code>、數字 <code>0-9</code>、空格與常用標點符號！<br>
+        • 加密密文與前綴皆升級為 <b>6 位數</b>，每次加密依然維持全隨機排序演算法。
     </div>
 
     <div class="form-group">
-        <label for="inputText">輸入文字：</label>
-        <textarea id="inputText" placeholder="加密：輸入英文或標點符號&#10;解密：直接貼上密文，系統會自動辨識並完成解密..."></textarea>
+        <label for="inputText">📝 輸入文字：</label>
+        <textarea id="inputText" placeholder="加密：輸入英文、數字或標點符號&#10;解密：直接貼上密文，系統會自動辨識並完成解密..."></textarea>
     </div>
 
     <div class="btn-group">
@@ -76,36 +77,38 @@
     </div>
 
     <div class="form-group" style="margin-top: 20px;">
-        <label for="outputText">輸出結果：</label>
+        <label for="outputText">✨ 輸出結果：</label>
         <textarea id="outputText" readonly placeholder="結果會顯示在這裡..."></textarea>
     </div>
 
-    <button class="btn-copy" onclick="copyResult()">一鍵複製結果</button>
+    <button class="btn-copy" onclick="copyResult()">📋 一鍵複製結果</button>
 
 <script>
-// 基礎字元
+// 📊 擴充基礎字元清單 (共 64 個字元，加入數字 0-9 與更多符號)
 const CHARS = [
     'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p',
-    'q','r','s','t','u','v','w','x','y','z',' ','。','？','，','[',']'
+    'q','r','s','t','u','v','w','x','y','z',
+    '0','1','2','3','4','5','6','7','8','9',
+    ' ','。','？','，','[',']','!','！','-','_','+','=','/','*',
+    '@','#','$','%','^','&','(',')','{','}','<','>'
 ];
 
-const BASE_BINARIES = [
-    "00001", "01101", "01000", "11011", "00101", "11110", "10000", "01001",
-    "11000", "00011", "01010", "10100", "00110", "10001", "10010", "11001",
-    "00111", "10110", "11010", "10111", "01011", "11101", "00010", "10011",
-    "00100", "01100", "11111", "10101", "01110", "11100", "00000", "11000"
-];
+// 📊 產生 64 個 6-bit 基礎二進位編碼 (000000 到 111111)
+const BASE_BINARIES = [];
+for (let i = 0; i < 64; i++) {
+    BASE_BINARIES.push(i.toString(2).padStart(6, '0'));
+}
 
-// 📊 內建 8 組後台模式與密碼對應表
+// 📊 內建 8 組後台模式與密碼對應表 (前綴升級為 6 位數)
 const MODE_CONFIG = {
-    "00000": "Key_Alpha_01", 
-    "11111": "Key_Beta_02",  
-    "10101": "Key_Gamma_03",
-    "01010": "Key_Delta_04",
-    "11000": "Key_Epsilon_05",
-    "00111": "Key_Zeta_06",
-    "11100": "Key_Eta_07",
-    "00011": "Key_Theta_08"
+    "000000": "Secret_Matrix_A1", 
+    "111111": "Secret_Matrix_B2",  
+    "101010": "Secret_Matrix_C3",
+    "010101": "Secret_Matrix_D4",
+    "111000": "Secret_Matrix_E5",
+    "000111": "Secret_Matrix_F6",
+    "110011": "Secret_Matrix_G7",
+    "001100": "Secret_Matrix_H8"
 };
 
 // 偽隨機數產生器
@@ -159,9 +162,8 @@ function getDynamicMap(key) {
     return { charToBin, binToChar };
 }
 
-// 執行加密 (全自動隨機模式)
+// 執行加密
 function encodeProcess() {
-    // 從 8 種前綴中自動隨機抽一組
     const availableModes = Object.keys(MODE_CONFIG);
     const randomIndex = Math.floor(Math.random() * availableModes.length);
     const mode = availableModes[randomIndex];
@@ -170,34 +172,36 @@ function encodeProcess() {
     const input = document.getElementById('inputText').value;
     const { charToBin } = getDynamicMap(key);
     
-    // 標點符號容錯
+    // 標點符號全半形通用轉換
     let cleanInput = input.toLowerCase()
         .replace(/\?/g, "？")
         .replace(/,/g, "，")
-        .replace(/\./g, "。");
+        .replace(/\./g, "。")
+        .replace(/!/g, "！");
     
-    let result = mode; // 置入識別前綴
+    let result = mode; // 放入 6 位數前綴碼
     for (let char of cleanInput) {
         if (charToBin[char] !== undefined) {
             result += charToBin[char];
         } else {
-            result += "?????"; 
+            result += "??????"; 
         }
     }
     document.getElementById('outputText').value = result;
 }
 
-// 智慧解密 (後台自動讀取前綴、切換密碼，不顯露給使用者)
+// 智慧解密
 function decodeProcess() {
     const input = document.getElementById('inputText').value;
     let cleanInput = input.replace(/[^01]/g, "");
     
-    if (cleanInput.length < 5) {
+    // 核心修改：前綴與內文皆變為 6 位數切分
+    if (cleanInput.length < 6) {
         alert("密文長度不足，無法識別！");
         return;
     }
     
-    const detectedHeader = cleanInput.substring(0, 5);
+    const detectedHeader = cleanInput.substring(0, 6);
     const key = MODE_CONFIG[detectedHeader];
     
     if (!key) {
@@ -209,9 +213,10 @@ function decodeProcess() {
     const { binToChar } = getDynamicMap(key);
     let result = "";
     
-    for (let i = 5; i < cleanInput.length; i += 5) {
-        let bin = cleanInput.substring(i, i + 5);
-        if (bin.length === 5) {
+    // 從第 7 碼 (索引 6) 開始解密，每 6 位數切一刀
+    for (let i = 6; i < cleanInput.length; i += 6) {
+        let bin = cleanInput.substring(i, i + 6);
+        if (bin.length === 6) {
             if (binToChar[bin] !== undefined) {
                 result += binToChar[bin];
             }
