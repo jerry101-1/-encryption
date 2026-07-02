@@ -210,10 +210,8 @@ function encodeProcess() {
     let mode = "";
     
     if (currentRole === "admin") {
-        // 管理員：完全由下拉選單挑選要用誰的通道進行加密
         mode = document.getElementById('encryptMode').value;
     } else {
-        // 成員：1對1鎖定，他輸入什麼密碼，就只能生成該密碼對應的前綴密文
         mode = Object.keys(MODE_CONFIG).find(key => MODE_CONFIG[key] === inputKey);
     }
     
@@ -238,32 +236,34 @@ function encodeProcess() {
     document.getElementById('outputText').value = result;
 }
 
-// 解密處理
+// 解密處理 (金鑰不符時不跳警告，直接噴問號)
 function decodeProcess() {
     const inputKey = document.getElementById('userKey').value.trim();
     const input = document.getElementById('inputText').value;
     let cleanInput = input.replace(/[^01]/g, "");
     
     if (cleanInput.length < 6) {
-        alert("密文長度不足，無法識別！");
+        document.getElementById('outputText').value = "？？？";
         return;
     }
     
     const detectedHeader = cleanInput.substring(0, 6);
     const matchedKey = MODE_CONFIG[detectedHeader];
     
-    if (!matchedKey) {
-        alert("未知的密文格式或損壞！");
+    // 💡 情況 A：如果是完全沒看過的前綴，或者金鑰不符合權限
+    if (!matchedKey || (currentRole !== "admin" && inputKey !== matchedKey)) {
+        let questionMarkResult = "";
+        // 算出這串密文包含幾個字元，就吐出對應數量的問號
+        let charCount = Math.floor((cleanInput.length - 6) / 6);
+        for (let i = 0; i < charCount; i++) {
+            questionMarkResult += "？";
+        }
+        // 如果連一個完整的字都沒有，至少給三個問號
+        document.getElementById('outputText').value = questionMarkResult || "？？？";
         return;
     }
     
-    // 安全權限校驗：若不是管理員，且當前輸入的密碼跟密文指定的密碼不符合，就拒絕解密
-    if (currentRole !== "admin" && inputKey !== matchedKey) {
-        alert("❌ 您的密碼不屬於此訊息的加密通道，無法解密！");
-        document.getElementById('outputText').value = "";
-        return;
-    }
-    
+    // 💡 情況 B：驗證成功（成員金鑰正確，或是管理員通吃權限），正常進行解密流程
     const { binToChar } = getDynamicMap(matchedKey);
     let result = "";
     
@@ -272,6 +272,8 @@ function decodeProcess() {
         if (bin.length === 6) {
             if (binToChar[bin] !== undefined) {
                 result += binToChar[bin];
+            } else {
+                result += "？";
             }
         }
     }
