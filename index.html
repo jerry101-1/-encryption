@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>智慧隨機加解密工具 (權限驗證版)</title>
+    <title>智慧隨機加解密工具 (支援數字版)</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -19,7 +19,7 @@
         h2 { text-align: center; color: #2c3e50; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"], input[type="password"], textarea {
+        input[type="text"], textarea {
             width: 100%;
             padding: 10px;
             box-sizing: border-box;
@@ -58,21 +58,22 @@
 </head>
 <body>
 
-    <h2>🔐 加解密工具</h2>
+    <h2>🔐 智慧隨機加解密工具 (支援數字版)</h2>
 
-    <div class="form-group">
-        <label for="userKey">🔑 請輸入金鑰/驗證密碼：</label>
-        <input type="password" id="userKey" placeholder="輸入密碼以啟用加解密權限...">
+    <div class="info-box">
+        🎲 <b>全自動隨機機制 (6-bit 升級版)：</b><br>
+        • 現在支援：英文 <code>a-z</code>、數字 <code>0-9</code>、空格與常用標點符號！<br>
+        • 加密密文與前綴皆升級為 <b>6 位數</b>，每次加密依然維持全隨機排序演算法。
     </div>
 
     <div class="form-group">
         <label for="inputText">📝 輸入文字：</label>
-        <textarea id="inputText" placeholder="加密：輸入英文、數字或標點符號&#10;解密：直接貼上密文，系統會自動辨識權限並解密..."></textarea>
+        <textarea id="inputText" placeholder="加密：輸入英文、數字或標點符號&#10;解密：直接貼上密文，系統會自動辨識並完成解密..."></textarea>
     </div>
 
     <div class="btn-group">
-        <button class="btn-encode" onclick="encodeProcess()">▲ 加密</button>
-        <button class="btn-decode" onclick="decodeProcess()">▼ 解密</button>
+        <button class="btn-encode" onclick="encodeProcess()">▲ 一鍵隨機加密</button>
+        <button class="btn-decode" onclick="decodeProcess()">▼ 智慧自動解密</button>
     </div>
 
     <div class="form-group" style="margin-top: 20px;">
@@ -83,7 +84,7 @@
     <button class="btn-copy" onclick="copyResult()">📋 一鍵複製結果</button>
 
 <script>
-// 📊 基礎字元清單 (共 64 個字元)
+// 📊 擴充基礎字元清單 (共 64 個字元，加入數字 0-9 與更多符號)
 const CHARS = [
     'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p',
     'q','r','s','t','u','v','w','x','y','z',
@@ -92,24 +93,22 @@ const CHARS = [
     '@','#','$','%','^','&','(',')','{','}','<','>'
 ];
 
+// 📊 產生 64 個 6-bit 基礎二進位編碼 (000000 到 111111)
 const BASE_BINARIES = [];
 for (let i = 0; i < 64; i++) {
     BASE_BINARIES.push(i.toString(2).padStart(6, '0'));
 }
 
-// 👑 設定你的萬用金鑰密碼 (可在這修改成你想要的密碼)
-const SUPER_ADMIN_KEY = "jerrya1011201@cindya1011202";
-
-// 📊 內建 8 組密碼與模式前綴的雙向對應表
+// 📊 內建 8 組後台模式與密碼對應表 (前綴升級為 6 位數)
 const MODE_CONFIG = {
-    "000000": "userpass1", 
-    "111111": "userpass2",  
-    "101010": "userpass3",
-    "010101": "userpass4",
-    "111000": "userpass5",
-    "000111": "userpass6",
-    "110011": "userpass7",
-    "001100": "userpass8"
+    "000000": "Secret_Matrix_A1", 
+    "111111": "Secret_Matrix_B2",  
+    "101010": "Secret_Matrix_C3",
+    "010101": "Secret_Matrix_D4",
+    "111000": "Secret_Matrix_E5",
+    "000111": "Secret_Matrix_F6",
+    "110011": "Secret_Matrix_G7",
+    "001100": "Secret_Matrix_H8"
 };
 
 // 偽隨機數產生器
@@ -153,6 +152,7 @@ function getDynamicMap(key) {
             [binaries[i], binaries[j]] = [binaries[j], binaries[i]];
         }
     }
+    
     let charToBin = {};
     let binToChar = {};
     CHARS.forEach((char, index) => {
@@ -164,40 +164,22 @@ function getDynamicMap(key) {
 
 // 執行加密
 function encodeProcess() {
-    const inputKey = document.getElementById('userKey').value.trim();
-    if (!inputKey) {
-        alert("請先輸入金鑰密碼！");
-        return;
-    }
-
-    let mode = "";
+    const availableModes = Object.keys(MODE_CONFIG);
+    const randomIndex = Math.floor(Math.random() * availableModes.length);
+    const mode = availableModes[randomIndex];
     
-    if (inputKey === SUPER_ADMIN_KEY) {
-        // 🌟 萬用金鑰加密：從 8 種模式中隨機抽一組
-        const availableModes = Object.keys(MODE_CONFIG);
-        const randomIndex = Math.floor(Math.random() * availableModes.length);
-        mode = availableModes[randomIndex];
-    } else {
-        // 👤 一般密碼加密：尋找對應的模式前綴
-        mode = Object.keys(MODE_CONFIG).find(key => MODE_CONFIG[key] === inputKey);
-        if (!mode) {
-            alert("無效的金鑰密碼，無法加密！");
-            return;
-        }
-    }
-    
-    // 使用該模式對應的密碼打亂編碼
-    const encryptionKey = MODE_CONFIG[mode]; 
+    const key = MODE_CONFIG[mode]; 
     const input = document.getElementById('inputText').value;
-    const { charToBin } = getDynamicMap(encryptionKey);
+    const { charToBin } = getDynamicMap(key);
     
+    // 標點符號全半形通用轉換
     let cleanInput = input.toLowerCase()
         .replace(/\?/g, "？")
         .replace(/,/g, "，")
         .replace(/\./g, "。")
         .replace(/!/g, "！");
     
-    let result = mode; 
+    let result = mode; // 放入 6 位數前綴碼
     for (let char of cleanInput) {
         if (charToBin[char] !== undefined) {
             result += charToBin[char];
@@ -210,39 +192,28 @@ function encodeProcess() {
 
 // 智慧解密
 function decodeProcess() {
-    const inputKey = document.getElementById('userKey').value.trim();
-    if (!inputKey) {
-        alert("請先輸入金鑰密碼！");
-        return;
-    }
-
     const input = document.getElementById('inputText').value;
     let cleanInput = input.replace(/[^01]/g, "");
     
+    // 核心修改：前綴與內文皆變為 6 位數切分
     if (cleanInput.length < 6) {
         alert("密文長度不足，無法識別！");
         return;
     }
     
     const detectedHeader = cleanInput.substring(0, 6);
-    const matchedKey = MODE_CONFIG[detectedHeader];
+    const key = MODE_CONFIG[detectedHeader];
     
-    if (!matchedKey) {
-        alert("未知的密文格式或損壞！");
-        return;
-    }
-    
-    // 🔒 權限校驗：如果不是你的萬用密碼，且輸入的密碼與該密文模式不符，就拒絕解密
-    if (inputKey !== SUPER_ADMIN_KEY && inputKey !== matchedKey) {
-        alert("❌ 您的密碼權限不足或不匹配，無法解密此訊息！");
+    if (!key) {
         document.getElementById('outputText').value = "";
+        alert("未知的識別碼，無法解密！");
         return;
     }
     
-    // 載入該模式的密鑰對照表
-    const { binToChar } = getDynamicMap(matchedKey);
+    const { binToChar } = getDynamicMap(key);
     let result = "";
     
+    // 從第 7 碼 (索引 6) 開始解密，每 6 位數切一刀
     for (let i = 6; i < cleanInput.length; i += 6) {
         let bin = cleanInput.substring(i, i + 6);
         if (bin.length === 6) {
