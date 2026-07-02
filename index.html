@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>智慧隨機加解密工具 (支援數字版)</title>
+    <title>安全多成員智慧加解密工具</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -19,7 +19,7 @@
         h2 { text-align: center; color: #2c3e50; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"], textarea {
+        input[type="text"], input[type="password"], textarea, select {
             width: 100%;
             padding: 10px;
             box-sizing: border-box;
@@ -45,46 +45,59 @@
         .btn-decode:hover { background-color: #27ae60; }
         .btn-copy { background-color: #e67e22; }
         .btn-copy:hover { background-color: #d35400; }
-        .info-box {
-            background-color: #e8f4fd;
-            border-left: 4px solid #3498db;
-            padding: 10px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            border-radius: 0 4px 4px 0;
-            line-height: 1.5;
-        }
+        .btn-verify { background-color: #9b59b6; margin-top: 10px; width: 100%; }
+        .btn-verify:hover { background-color: #8e44ad; }
+        
+        /* 👁️ 用於動態隱藏介面的 CSS */
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <h2>🔐 智慧隨機加解密工具 (支援數字版)</h2>
+    <h2>🔐 智慧安全加解密系統</h2>
 
-    <div class="info-box">
-        🎲 <b>全自動隨機機制 (6-bit 升級版)：</b><br>
-        • 現在支援：英文 <code>a-z</code>、數字 <code>0-9</code>、空格與常用標點符號！<br>
-        • 加密密文與前綴皆升級為 <b>6 位數</b>，每次加密依然維持全隨機排序演算法。
+    <div id="authBlock" class="form-group">
+        <label for="userKey">🔑 請輸入存取安全金鑰密碼：</label>
+        <input type="password" id="userKey" placeholder="請先輸入密碼以解鎖主功能系統...">
+        <button class="btn-verify" onclick="verifyPassword()">🔓 登入系統</button>
     </div>
 
-    <div class="form-group">
-        <label for="inputText">📝 輸入文字：</label>
-        <textarea id="inputText" placeholder="加密：輸入英文、數字或標點符號&#10;解密：直接貼上密文，系統會自動辨識並完成解密..."></textarea>
-    </div>
+    <div id="mainBlock" class="hidden">
+        
+        <div id="adminMenuBlock" class="form-group hidden">
+            <label for="encryptMode">⚙️ 管理員控制面板：切換加密通道</label>
+            <select id="encryptMode">
+                <option value="000000" selected>成員一 (前綴: 000000 / 金鑰: userpass1)</option>
+                <option value="111111">成員二 (前綴: 111111 / 金鑰: userpass2)</option>
+                <option value="101010">成員三 (前綴: 101010 / 金鑰: userpass3)</option>
+                <option value="010101">成員四 (前綴: 010101 / 金鑰: userpass4)</option>
+                <option value="111000">成員五 (前綴: 111000 / 金鑰: userpass5)</option>
+                <option value="000111">成員六 (前綴: 000111 / 金鑰: userpass6)</option>
+                <option value="110011">成員七 (前綴: 110011 / 金鑰: userpass7)</option>
+                <option value="001100">成員八 (前綴: 001100 / 金鑰: userpass8)</option>
+            </select>
+        </div>
 
-    <div class="btn-group">
-        <button class="btn-encode" onclick="encodeProcess()">▲ 一鍵隨機加密</button>
-        <button class="btn-decode" onclick="decodeProcess()">▼ 智慧自動解密</button>
-    </div>
+        <div class="form-group">
+            <label for="inputText">📝 輸入文字：</label>
+            <textarea id="inputText" placeholder="加密：輸入文字&#10;解密：直接貼上密文，系統會自動辨識並解密..."></textarea>
+        </div>
 
-    <div class="form-group" style="margin-top: 20px;">
-        <label for="outputText">✨ 輸出結果：</label>
-        <textarea id="outputText" readonly placeholder="結果會顯示在這裡..."></textarea>
-    </div>
+        <div class="btn-group">
+            <button class="btn-encode" onclick="encodeProcess()">▲ 安全加密</button>
+            <button class="btn-decode" onclick="decodeProcess()">▼ 智慧解密</button>
+        </div>
 
-    <button class="btn-copy" onclick="copyResult()">📋 一鍵複製結果</button>
+        <div class="form-group" style="margin-top: 20px;">
+            <label for="outputText">✨ 輸出結果：</label>
+            <textarea id="outputText" readonly placeholder="結果會顯示在這裡..."></textarea>
+        </div>
+
+        <button class="btn-copy" onclick="copyResult()">📋 一鍵複製結果</button>
+    </div>
 
 <script>
-// 📊 擴充基礎字元清單 (共 64 個字元，加入數字 0-9 與更多符號)
+// 📊 基礎 64 字元對照清單
 const CHARS = [
     'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p',
     'q','r','s','t','u','v','w','x','y','z',
@@ -93,25 +106,55 @@ const CHARS = [
     '@','#','$','%','^','&','(',')','{','}','<','>'
 ];
 
-// 📊 產生 64 個 6-bit 基礎二進位編碼 (000000 到 111111)
 const BASE_BINARIES = [];
 for (let i = 0; i < 64; i++) {
     BASE_BINARIES.push(i.toString(2).padStart(6, '0'));
 }
 
-// 📊 內建 8 組後台模式與密碼對應表 (前綴升級為 6 位數)
+// 👑 管理員最高權限萬用金鑰 (可在這裡換成你要的密碼)
+const SUPER_ADMIN_KEY = "superadmin";
+
+// 👤 成員金鑰密碼對照表（1對1綁定，沒有隨機機制）
 const MODE_CONFIG = {
-    "000000": "Secret_Matrix_A1", 
-    "111111": "Secret_Matrix_B2",  
-    "101010": "Secret_Matrix_C3",
-    "010101": "Secret_Matrix_D4",
-    "111000": "Secret_Matrix_E5",
-    "000111": "Secret_Matrix_F6",
-    "110011": "Secret_Matrix_G7",
-    "001100": "Secret_Matrix_H8"
+    "000000": "userpass1", 
+    "111111": "userpass2",  
+    "101010": "userpass3",
+    "010101": "userpass4",
+    "111000": "userpass5",
+    "000111": "userpass6",
+    "110011": "userpass7",
+    "001100": "userpass8"
 };
 
-// 偽隨機數產生器
+let currentRole = "user"; 
+
+// 🔑 驗證金鑰登入
+function verifyPassword() {
+    const inputKey = document.getElementById('userKey').value.trim();
+    if (!inputKey) {
+        alert("請輸入金鑰密碼！");
+        return;
+    }
+
+    if (inputKey === SUPER_ADMIN_KEY) {
+        currentRole = "admin";
+        document.getElementById('authBlock').classList.add('hidden'); // 隱藏密碼認證輸入區
+        document.getElementById('mainBlock').classList.remove('hidden'); // 解鎖主畫面
+        document.getElementById('adminMenuBlock').classList.remove('hidden'); // 顯示管理員專屬加密控制選單
+    } else {
+        const modeExists = Object.values(MODE_CONFIG).includes(inputKey);
+        if (modeExists) {
+            currentRole = "user";
+            document.getElementById('authBlock').classList.add('hidden'); // 隱藏密碼認證輸入區
+            document.getElementById('mainBlock').classList.remove('hidden'); // 解鎖主畫面
+            // 💡 一般成員登入，管理員選單（adminMenuBlock）依然維持 hidden 隱藏，完全不顯示
+        } else {
+            alert("❌ 密碼驗證失敗，拒絕存取！");
+        }
+    }
+}
+
+// 偽隨機數產生器（配合密鑰演算）
 function cyrb128(str) {
     let h1 = 1779033703, h2 = 3024734765, h3 = 3362453663, h4 = 502494325;
     for (let i = 0, k; i < str.length; i++) {
@@ -152,7 +195,6 @@ function getDynamicMap(key) {
             [binaries[i], binaries[j]] = [binaries[j], binaries[i]];
         }
     }
-    
     let charToBin = {};
     let binToChar = {};
     CHARS.forEach((char, index) => {
@@ -162,24 +204,30 @@ function getDynamicMap(key) {
     return { charToBin, binToChar };
 }
 
-// 執行加密
+// 加密處理
 function encodeProcess() {
-    const availableModes = Object.keys(MODE_CONFIG);
-    const randomIndex = Math.floor(Math.random() * availableModes.length);
-    const mode = availableModes[randomIndex];
+    const inputKey = document.getElementById('userKey').value.trim();
+    let mode = "";
     
-    const key = MODE_CONFIG[mode]; 
+    if (currentRole === "admin") {
+        // 管理員：完全由下拉選單挑選要用誰的通道進行加密
+        mode = document.getElementById('encryptMode').value;
+    } else {
+        // 成員：1對1鎖定，他輸入什麼密碼，就只能生成該密碼對應的前綴密文
+        mode = Object.keys(MODE_CONFIG).find(key => MODE_CONFIG[key] === inputKey);
+    }
+    
+    const encryptionKey = MODE_CONFIG[mode]; 
     const input = document.getElementById('inputText').value;
-    const { charToBin } = getDynamicMap(key);
+    const { charToBin } = getDynamicMap(encryptionKey);
     
-    // 標點符號全半形通用轉換
     let cleanInput = input.toLowerCase()
         .replace(/\?/g, "？")
         .replace(/,/g, "，")
         .replace(/\./g, "。")
         .replace(/!/g, "！");
     
-    let result = mode; // 放入 6 位數前綴碼
+    let result = mode; 
     for (let char of cleanInput) {
         if (charToBin[char] !== undefined) {
             result += charToBin[char];
@@ -190,30 +238,35 @@ function encodeProcess() {
     document.getElementById('outputText').value = result;
 }
 
-// 智慧解密
+// 解密處理
 function decodeProcess() {
+    const inputKey = document.getElementById('userKey').value.trim();
     const input = document.getElementById('inputText').value;
     let cleanInput = input.replace(/[^01]/g, "");
     
-    // 核心修改：前綴與內文皆變為 6 位數切分
     if (cleanInput.length < 6) {
         alert("密文長度不足，無法識別！");
         return;
     }
     
     const detectedHeader = cleanInput.substring(0, 6);
-    const key = MODE_CONFIG[detectedHeader];
+    const matchedKey = MODE_CONFIG[detectedHeader];
     
-    if (!key) {
-        document.getElementById('outputText').value = "";
-        alert("未知的識別碼，無法解密！");
+    if (!matchedKey) {
+        alert("未知的密文格式或損壞！");
         return;
     }
     
-    const { binToChar } = getDynamicMap(key);
+    // 安全權限校驗：若不是管理員，且當前輸入的密碼跟密文指定的密碼不符合，就拒絕解密
+    if (currentRole !== "admin" && inputKey !== matchedKey) {
+        alert("❌ 您的密碼不屬於此訊息的加密通道，無法解密！");
+        document.getElementById('outputText').value = "";
+        return;
+    }
+    
+    const { binToChar } = getDynamicMap(matchedKey);
     let result = "";
     
-    // 從第 7 碼 (索引 6) 開始解密，每 6 位數切一刀
     for (let i = 6; i < cleanInput.length; i += 6) {
         let bin = cleanInput.substring(i, i + 6);
         if (bin.length === 6) {
