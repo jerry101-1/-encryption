@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>智慧權限隨機加解密工具</title>
+    <title>智慧隨機加解密工具 (權限驗證版)</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -19,7 +19,7 @@
         h2 { text-align: center; color: #2c3e50; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"], input[type="password"], textarea, select {
+        input[type="text"], input[type="password"], textarea {
             width: 100%;
             padding: 10px;
             box-sizing: border-box;
@@ -45,12 +45,6 @@
         .btn-decode:hover { background-color: #27ae60; }
         .btn-copy { background-color: #e67e22; }
         .btn-copy:hover { background-color: #d35400; }
-        .btn-verify { background-color: #9b59b6; margin-top: 5px; }
-        .btn-verify:hover { background-color: #8e44ad; }
-        
-        /* 👁️ 控制隱藏與顯示的樣式 */
-        .hidden { display: none !important; }
-        
         .info-box {
             background-color: #e8f4fd;
             border-left: 4px solid #3498db;
@@ -64,51 +58,32 @@
 </head>
 <body>
 
-    <h2>🔐 智慧隨機加解密工具</h2>
+    <h2>🔐 加解密工具</h2>
 
-    <div id="authBlock" class="form-group">
-        <label for="userKey">🔑 請輸入安全金鑰密碼：</label>
-        <input type="password" id="userKey" placeholder="請輸入密碼以解鎖系統...">
-        <button class="btn-verify" onclick="verifyPassword()">🔓 驗證並登入</button>
+    <div class="form-group">
+        <label for="userKey">🔑 請輸入金鑰/驗證密碼：</label>
+        <input type="password" id="userKey" placeholder="輸入密碼以啟用加解密權限...">
     </div>
 
-    <div id="mainBlock" class="hidden">
-        
-        <div id="adminMenuBlock" class="form-group hidden">
-            <label for="encryptMode">⚙️ 管理員控制：手動指定加密模式</label>
-            <select id="encryptMode">
-                <option value="random" selected>🎲 隨機模式 (預設隨機抽取)</option>
-                <option value="000000">模式一 (前綴: 000000)</option>
-                <option value="111111">模式二 (前綴: 111111)</option>
-                <option value="101010">模式三 (前綴: 101010)</option>
-                <option value="010101">模式四 (前綴: 010101)</option>
-                <option value="111000">模式五 (前綴: 111000)</option>
-                <option value="000111">模式六 (前綴: 000111)</option>
-                <option value="110011">模式七 (前綴: 110011)</option>
-                <option value="001100">模式八 (前綴: 001100)</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="inputText">📝 輸入文字：</label>
-            <textarea id="inputText" placeholder="加密：輸入文字&#10;解密：直接貼上密文，系統會自動解密..."></textarea>
-        </div>
-
-        <div class="btn-group">
-            <button class="btn-encode" onclick="encodeProcess()">▲ 安全加密</button>
-            <button class="btn-decode" onclick="decodeProcess()">▼ 智慧解密</button>
-        </div>
-
-        <div class="form-group" style="margin-top: 20px;">
-            <label for="outputText">✨ 輸出結果：</label>
-            <textarea id="outputText" readonly placeholder="結果會顯示在這裡..."></textarea>
-        </div>
-
-        <button class="btn-copy" onclick="copyResult()">📋 一鍵複製結果</button>
+    <div class="form-group">
+        <label for="inputText">📝 輸入文字：</label>
+        <textarea id="inputText" placeholder="加密：輸入英文、數字或標點符號&#10;解密：直接貼上密文，系統會自動辨識權限並解密..."></textarea>
     </div>
+
+    <div class="btn-group">
+        <button class="btn-encode" onclick="encodeProcess()">▲ 加密</button>
+        <button class="btn-decode" onclick="decodeProcess()">▼ 解密</button>
+    </div>
+
+    <div class="form-group" style="margin-top: 20px;">
+        <label for="outputText">✨ 輸出結果：</label>
+        <textarea id="outputText" readonly placeholder="結果會顯示在這裡..."></textarea>
+    </div>
+
+    <button class="btn-copy" onclick="copyResult()">📋 一鍵複製結果</button>
 
 <script>
-// 📊 基礎字元清單
+// 📊 基礎字元清單 (共 64 個字元)
 const CHARS = [
     'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p',
     'q','r','s','t','u','v','w','x','y','z',
@@ -122,10 +97,10 @@ for (let i = 0; i < 64; i++) {
     BASE_BINARIES.push(i.toString(2).padStart(6, '0'));
 }
 
-// 👑 你的最高權限管理員密碼
+// 👑 設定你的萬用金鑰密碼 (可在這修改成你想要的密碼)
 const SUPER_ADMIN_KEY = "superadmin";
 
-// 👤 訪客密碼對應表
+// 📊 內建 8 組密碼與模式前綴的雙向對應表
 const MODE_CONFIG = {
     "000000": "userpass1", 
     "111111": "userpass2",  
@@ -136,36 +111,6 @@ const MODE_CONFIG = {
     "110011": "userpass7",
     "001100": "userpass8"
 };
-
-let currentRole = "user"; // 紀錄當前登入身分
-
-// 🔑 密碼驗證邏輯
-function verifyPassword() {
-    const inputKey = document.getElementById('userKey').value.trim();
-    if (!inputKey) {
-        alert("請輸入密碼！");
-        return;
-    }
-
-    if (inputKey === SUPER_ADMIN_KEY) {
-        // 管理員登入：開啟主功能 + 開啟指定模式選單
-        currentRole = "admin";
-        document.getElementById('authBlock').classList.add('hidden');
-        document.getElementById('mainBlock').classList.remove('hidden');
-        document.getElementById('adminMenuBlock').classList.remove('hidden');
-    } else {
-        // 檢查是否是一般密碼
-        const modeExists = Object.values(MODE_CONFIG).includes(inputKey);
-        if (modeExists) {
-            currentRole = "user";
-            document.getElementById('authBlock').classList.add('hidden');
-            document.getElementById('mainBlock').classList.remove('hidden');
-            // 💡 訪客登入，確保管理員選單（adminMenuBlock）維持隱藏，完全看不到
-        } else {
-            alert("❌ 密碼錯誤，拒絕存取！");
-        }
-    }
-}
 
 // 偽隨機數產生器
 function cyrb128(str) {
@@ -220,23 +165,28 @@ function getDynamicMap(key) {
 // 執行加密
 function encodeProcess() {
     const inputKey = document.getElementById('userKey').value.trim();
+    if (!inputKey) {
+        alert("請先輸入金鑰密碼！");
+        return;
+    }
+
     let mode = "";
     
-    if (currentRole === "admin") {
-        // 👑 管理員加密：讀取下拉選單的設定
-        const selectedMode = document.getElementById('encryptMode').value;
-        if (selectedMode === "random") {
-            const availableModes = Object.keys(MODE_CONFIG);
-            const randomIndex = Math.floor(Math.random() * availableModes.length);
-            mode = availableModes[randomIndex];
-        } else {
-            mode = selectedMode;
-        }
+    if (inputKey === SUPER_ADMIN_KEY) {
+        // 🌟 萬用金鑰加密：從 8 種模式中隨機抽一組
+        const availableModes = Object.keys(MODE_CONFIG);
+        const randomIndex = Math.floor(Math.random() * availableModes.length);
+        mode = availableModes[randomIndex];
     } else {
-        // 👤 訪客加密：強制綁定他密碼對應的唯一模式
+        // 👤 一般密碼加密：尋找對應的模式前綴
         mode = Object.keys(MODE_CONFIG).find(key => MODE_CONFIG[key] === inputKey);
+        if (!mode) {
+            alert("無效的金鑰密碼，無法加密！");
+            return;
+        }
     }
     
+    // 使用該模式對應的密碼打亂編碼
     const encryptionKey = MODE_CONFIG[mode]; 
     const input = document.getElementById('inputText').value;
     const { charToBin } = getDynamicMap(encryptionKey);
@@ -261,6 +211,11 @@ function encodeProcess() {
 // 智慧解密
 function decodeProcess() {
     const inputKey = document.getElementById('userKey').value.trim();
+    if (!inputKey) {
+        alert("請先輸入金鑰密碼！");
+        return;
+    }
+
     const input = document.getElementById('inputText').value;
     let cleanInput = input.replace(/[^01]/g, "");
     
@@ -277,13 +232,14 @@ function decodeProcess() {
         return;
     }
     
-    // 🔒 權限防護
-    if (currentRole !== "admin" && inputKey !== matchedKey) {
-        alert("❌ 您的密碼權限不足，無法解密此訊息！");
+    // 🔒 權限校驗：如果不是你的萬用密碼，且輸入的密碼與該密文模式不符，就拒絕解密
+    if (inputKey !== SUPER_ADMIN_KEY && inputKey !== matchedKey) {
+        alert("❌ 您的密碼權限不足或不匹配，無法解密此訊息！");
         document.getElementById('outputText').value = "";
         return;
     }
     
+    // 載入該模式的密鑰對照表
     const { binToChar } = getDynamicMap(matchedKey);
     let result = "";
     
