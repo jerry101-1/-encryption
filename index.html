@@ -95,8 +95,48 @@
 
         <button class="btn-copy" onclick="copyResult()">📋 一鍵複製結果</button>
     </div>
-
 <script>
+// ==========================================
+// 🛡️ 這一區就是新加入的「強效防 F12 毀滅者」指令碼
+// ==========================================
+// 🚫 1. 禁用右鍵選單（防止點選「檢查」）
+document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+});
+
+// ⌨️ 2. 封鎖鍵盤上所有的 F12 與三大開發者工具快捷鍵
+document.addEventListener('keydown', function(e) {
+    if (e.key === "F12") {
+        e.preventDefault();
+        return false;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'i') {
+        e.preventDefault();
+        return false;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'j') {
+        e.preventDefault();
+        return false;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'u') {
+        e.preventDefault();
+        return false;
+    }
+});
+
+// ⚡ 3. 終極殺招：只要有人繞過快捷鍵強行打開 F12，立刻用偵錯斷點將其無限卡死，並抹除畫面
+(function() {
+    function banConsole() {
+        const startTime = new Date().getTime();
+        debugger; 
+        const endTime = new Date().getTime();
+        if (endTime - startTime > 100) {
+            document.body.innerHTML = '<h1 style="color:red;text-align:center;margin-top:200px;">⚠️ 偵測到非法安全檢查，系統已鎖定！</h1>';
+            setTimeout(() => { window.location.reload(); }, 1000);
+        }
+    }
+    setInterval(banConsole, 400); // 每 0.4 秒瘋狂自我掃描偵錯
+})();
 // 📊 基礎 64 字元對照清單
 const CHARS = [
     'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p',
