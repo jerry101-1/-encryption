@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>加解密工具</title>
+    <title>智慧安全加解密系統</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -48,7 +48,12 @@
         .btn-verify { background-color: #9b59b6; margin-top: 10px; width: 100%; }
         .btn-verify:hover { background-color: #8e44ad; }
         
-        /* 👁️ 用於動態隱藏介面的 CSS */
+        /* 👑 管理員專屬與改密碼進階按鈕樣式 */
+        .btn-admin-view { background-color: #e74c3c; margin-bottom: 15px; width: 100%; }
+        .btn-admin-view:hover { background-color: #c0392b; }
+        .btn-change-pw { background-color: #34495e; margin-top: 5px; width: 100%; }
+        .btn-change-pw:hover { background-color: #2c3e50; }
+        
         .hidden { display: none !important; }
     </style>
 </head>
@@ -64,6 +69,8 @@
 
     <div id="mainBlock" class="hidden">
         
+        <button id="adminViewBtn" class="btn-admin-view hidden" onclick="showAllPasswords()">👁️ 檢視成員目前金鑰密碼</button>
+        
         <div id="adminMenuBlock" class="form-group hidden">
             <label for="encryptMode">⚙️ 管理員控制面板：切換加密通道</label>
             <select id="encryptMode">
@@ -76,6 +83,7 @@
                 <option value="110011">成員七 (前綴: 110011 )</option>
                 <option value="001100">成員八 (前綴: 001100 )</option>
             </select>
+            <hr>
         </div>
 
         <div class="form-group">
@@ -94,37 +102,28 @@
         </div>
 
         <button class="btn-copy" onclick="copyResult()">📋 一鍵複製結果</button>
+        
+        <br><br>
+        <div class="form-group" style="border-top: 1px dashed #ccc; padding-top: 15px;">
+            <label>🛠️ 帳號安全：修改您目前的專屬金鑰密碼</label>
+            <input type="password" id="newPasswordInput" placeholder="輸入想要變更的新密碼...">
+            <button class="btn-change-pw" onclick="changeCurrentPassword()">💾 確認修改密碼</button>
+        </div>
     </div>
+
 <script>
 // ==========================================
-// 🛡️ 這一區就是新加入的「強效防 F12 毀滅者」指令碼
+// 🛡️ 強效防 F12 毀滅者指令碼
 // ==========================================
-// 🚫 1. 禁用右鍵選單（防止點選「檢查」）
-document.addEventListener('contextmenu', function(e) {
-    e.preventDefault();
-});
-
-// ⌨️ 2. 封鎖鍵盤上所有的 F12 與三大開發者工具快捷鍵
+document.addEventListener('contextmenu', e => e.preventDefault());
 document.addEventListener('keydown', function(e) {
-    if (e.key === "F12") {
-        e.preventDefault();
-        return false;
-    }
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'i') {
-        e.preventDefault();
-        return false;
-    }
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'j') {
-        e.preventDefault();
-        return false;
-    }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'u') {
+    if (e.key === "F12" || 
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && ['i','j'].includes(e.key.toLowerCase())) ||
+        ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'u')) {
         e.preventDefault();
         return false;
     }
 });
-
-// ⚡ 3. 終極殺招：只要有人繞過快捷鍵強行打開 F12，立刻用偵錯斷點將其無限卡死，並抹除畫面
 (function() {
     function banConsole() {
         const startTime = new Date().getTime();
@@ -135,9 +134,12 @@ document.addEventListener('keydown', function(e) {
             setTimeout(() => { window.location.reload(); }, 1000);
         }
     }
-    setInterval(banConsole, 400); // 每 0.4 秒瘋狂自我掃描偵錯
+    setInterval(banConsole, 400);
 })();
-// 📊 基礎 64 字元對照清單
+
+// ==========================================
+// 📊 基礎 64 字元對照清單與功能邏輯
+// ==========================================
 const CHARS = [
     'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p',
     'q','r','s','t','u','v','w','x','y','z',
@@ -151,11 +153,11 @@ for (let i = 0; i < 64; i++) {
     BASE_BINARIES.push(i.toString(2).padStart(6, '0'));
 }
 
-// 👑 管理員最高權限萬用金鑰 (可在這裡換成你要的密碼)
+// 👑 管理員最高權限萬用金鑰 (明文比對，方便管理員登入)
 const SUPER_ADMIN_KEY = "jerrya1011201@cindya1011202";
 
-// 👤 成員金鑰密碼對照表（1對1綁定，沒有隨機機制）
-const MODE_CONFIG = {
+// 👤 初始化預設密碼表 (如果瀏覽器內還沒有紀錄，就用這些預設值)
+const DEFAULT_PASSWORDS = {
     "000000": "userpass1", 
     "111111": "Kris@Lucy",  
     "101010": "userpass3",
@@ -166,7 +168,19 @@ const MODE_CONFIG = {
     "001100": "userpass8"
 };
 
+// 讀取目前的密碼設定狀態（優先從本機緩存拿，實現動態改密碼）
+function getLatestPasswords() {
+    const localData = localStorage.getItem('SYSTEM_MEMBER_KEYS');
+    if (!localData) {
+        localStorage.setItem('SYSTEM_MEMBER_KEYS', JSON.stringify(DEFAULT_PASSWORDS));
+        return DEFAULT_PASSWORDS;
+    }
+    return JSON.parse(localData);
+}
+
 let currentRole = "user"; 
+let loggedInPrefix = ""; // 紀錄目前是哪一個成員登入 (如 "000000")
+let savedRawKey = "";    // 暫存登入時使用的密碼
 
 // 🔑 驗證金鑰登入
 function verifyPassword() {
@@ -176,55 +190,97 @@ function verifyPassword() {
         return;
     }
 
+    savedRawKey = inputKey;
+    const currentPasswords = getLatestPasswords();
+
     if (inputKey === SUPER_ADMIN_KEY) {
         currentRole = "admin";
-        document.getElementById('authBlock').classList.add('hidden'); // 隱藏密碼認證輸入區
-        document.getElementById('mainBlock').classList.remove('hidden'); // 解鎖主畫面
-        document.getElementById('adminMenuBlock').classList.remove('hidden'); // 顯示管理員專屬加密控制選單
+        document.getElementById('authBlock').classList.add('hidden'); 
+        document.getElementById('mainBlock').classList.remove('hidden'); 
+        document.getElementById('adminMenuBlock').classList.remove('hidden'); 
+        document.getElementById('adminViewBtn').classList.remove('hidden'); // ✨ 顯示管理員看密碼按鈕
     } else {
-        const modeExists = Object.values(MODE_CONFIG).includes(inputKey);
-        if (modeExists) {
+        // 尋找是哪一個成員的密碼符合
+        const matchedPrefix = Object.keys(currentPasswords).find(prefix => currentPasswords[prefix] === inputKey);
+        if (matchedPrefix) {
             currentRole = "user";
-            document.getElementById('authBlock').classList.add('hidden'); // 隱藏密碼認證輸入區
-            document.getElementById('mainBlock').classList.remove('hidden'); // 解鎖主畫面
-            // 💡 一般成員登入，管理員選單（adminMenuBlock）依然維持 hidden 隱藏，完全不顯示
+            loggedInPrefix = matchedPrefix; // 標記目前登入者的身份
+            document.getElementById('authBlock').classList.add('hidden'); 
+            document.getElementById('mainBlock').classList.remove('hidden'); 
         } else {
             alert("❌ 密碼驗證失敗，拒絕存取！");
         }
     }
 }
 
-// 偽隨機數產生器（配合密鑰演算）
+// 👑 管理員專屬功能：跳窗顯示所有人的密碼
+function showAllPasswords() {
+    if (currentRole !== "admin") return;
+    const currentPasswords = getLatestPasswords();
+    let message = "📋 【當前系統所有成員金鑰密碼清單】\n\n";
+    message += `成員一 (小魚 000000)：${currentPasswords["000000"]}\n`;
+    message += `成員二 (Kris 111111)：${currentPasswords["111111"]}\n`;
+    message += `成員三 (101010)：${currentPasswords["101010"]}\n`;
+    message += `成員四 (010101)：${currentPasswords["010101"]}\n`;
+    message += `成員五 (111000)：${currentPasswords["111000"]}\n`;
+    message += `成員六 (000111)：${currentPasswords["000111"]}\n`;
+    message += `成員七 (110011)：${currentPasswords["110011"]}\n`;
+    message += `成員八 (001100)：${currentPasswords["001100"]}\n`;
+    alert(message);
+}
+
+// 👤 成員/管理員功能：修改密碼
+function changeCurrentPassword() {
+    const newPassword = document.getElementById('newPasswordInput').value.trim();
+    if (!newPassword) {
+        alert("請輸入有效的新密碼！");
+        return;
+    }
+    
+    let targetPrefix = "";
+    if (currentRole === "admin") {
+        // 管理員可以幫目前下拉選單選中的那個人改密碼
+        targetPrefix = document.getElementById('encryptMode').value;
+    } else {
+        // 普通成員只能修改自己登入的那個帳號
+        targetPrefix = loggedInPrefix;
+    }
+    
+    const currentPasswords = getLatestPasswords();
+    currentPasswords[targetPrefix] = newPassword; // 覆蓋新密碼
+    localStorage.setItem('SYSTEM_MEMBER_KEYS', JSON.stringify(currentPasswords)); // 儲存
+    
+    alert("💾 密碼已成功更新！下次登入請使用新密碼。");
+    document.getElementById('newPasswordInput').value = "";
+    
+    // 如果是成員自己改的，順便更新當前的 session 密碼快取
+    if (currentRole !== "admin") {
+        savedRawKey = newPassword;
+    }
+}
+
+// 偽隨機數產生器
 function cyrb128(str) {
     let h1 = 1779033703, h2 = 3024734765, h3 = 3362453663, h4 = 502494325;
     for (let i = 0, k; i < str.length; i++) {
         k = str.charCodeAt(i);
         h1 = h2 ^ Math.imul(h1 ^ k, 597399067);
         h2 = h3 ^ Math.imul(h2 ^ k, 2869860233);
-        h3 = h4 ^ Math.imul(h3 ^ k, 951274213);
+        h3 = h4 ^ Math.imul(h3 ^ k, 2869860233);
         h4 = h1 ^ Math.imul(h4 ^ k, 2716044179);
     }
-    h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067);
-    h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860233);
-    h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213);
-    h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179);
-    return [(h1^h2^h3^h4)>>>0, (h2^h1)>>>0, (h3^h1)>>>0, (h4^h1)>>>0];
+    return [(h1^h2)>>>0, h2>>>0, h3>>>0, h4>>>0];
 }
-
 function sfc32(a, b, c, d) {
     return function() {
         a >>>= 0; b >>>= 0; c >>>= 0; d >>>= 0;
         var t = (a + b) | 0;
-        a = b ^ (b >>> 9);
-        b = (c + (c << 3)) | 0;
-        c = (c << 21) | (c >>> 11);
-        d = (d + 1) | 0;
-        t = (t + d) | 0;
-        c = (c + t) | 0;
+        a = b ^ (b >>> 9); b = (c + (c << 3)) | 0;
+        c = (c << 21) | (c >>> 11); d = (d + 1) | 0;
+        t = (t + d) | 0; c = (c + t) | 0;
         return (t >>> 0) / 4294967296;
     }
 }
-
 function getDynamicMap(key) {
     let binaries = [...BASE_BINARIES];
     if (key.trim() !== "") {
@@ -235,8 +291,7 @@ function getDynamicMap(key) {
             [binaries[i], binaries[j]] = [binaries[j], binaries[i]];
         }
     }
-    let charToBin = {};
-    let binToChar = {};
+    let charToBin = {}; let binToChar = {};
     CHARS.forEach((char, index) => {
         charToBin[char] = binaries[index];
         binToChar[binaries[index]] = char;
@@ -246,39 +301,32 @@ function getDynamicMap(key) {
 
 // 加密處理
 function encodeProcess() {
-    const inputKey = document.getElementById('userKey').value.trim();
     let mode = "";
+    let encryptionKey = "";
+    const currentPasswords = getLatestPasswords();
     
     if (currentRole === "admin") {
         mode = document.getElementById('encryptMode').value;
+        encryptionKey = mode; 
     } else {
-        mode = Object.keys(MODE_CONFIG).find(key => MODE_CONFIG[key] === inputKey);
+        mode = loggedInPrefix;
+        encryptionKey = savedRawKey;
     }
     
-    const encryptionKey = MODE_CONFIG[mode]; 
     const input = document.getElementById('inputText').value;
     const { charToBin } = getDynamicMap(encryptionKey);
     
-    let cleanInput = input.toLowerCase()
-        .replace(/\?/g, "？")
-        .replace(/,/g, "，")
-        .replace(/\./g, "。")
-        .replace(/!/g, "！");
-    
+    let cleanInput = input.toLowerCase().replace(/\?/g, "？").replace(/,/g, "，").replace(/\./g, "。").replace(/!/g, "！");
     let result = mode; 
     for (let char of cleanInput) {
-        if (charToBin[char] !== undefined) {
-            result += charToBin[char];
-        } else {
-            result += "??????"; 
-        }
+        if (charToBin[char] !== undefined) result += charToBin[char];
+        else result += "??????";
     }
     document.getElementById('outputText').value = result;
 }
 
-// 解密處理 (金鑰不符時不跳警告，直接噴問號)
+// 解密處理
 function decodeProcess() {
-    const inputKey = document.getElementById('userKey').value.trim();
     const input = document.getElementById('inputText').value;
     let cleanInput = input.replace(/[^01]/g, "");
     
@@ -288,51 +336,35 @@ function decodeProcess() {
     }
     
     const detectedHeader = cleanInput.substring(0, 6);
-    const matchedKey = MODE_CONFIG[detectedHeader];
+    const currentPasswords = getLatestPasswords();
+    const targetPassword = currentPasswords[detectedHeader];
     
-    // 💡 情況 A：如果是完全沒看過的前綴，或者金鑰不符合權限
-    if (!matchedKey || (currentRole !== "admin" && inputKey !== matchedKey)) {
+    // 🔒 權限檢核：如果不對就靜默吐問號
+    if (!targetPassword || (currentRole !== "admin" && savedRawKey !== targetPassword)) {
         let questionMarkResult = "";
-        // 算出這串密文包含幾個字元，就吐出對應數量的問號
         let charCount = Math.floor((cleanInput.length - 6) / 6);
-        for (let i = 0; i < charCount; i++) {
-            questionMarkResult += "？";
-        }
-        // 如果連一個完整的字都沒有，至少給三個問號
+        for (let i = 0; i < charCount; i++) questionMarkResult += "？";
         document.getElementById('outputText').value = questionMarkResult || "？？？";
         return;
     }
     
-    // 💡 情況 B：驗證成功（成員金鑰正確，或是管理員通吃權限），正常進行解密流程
-    const { binToChar } = getDynamicMap(matchedKey);
+    const decodingKey = (currentRole === "admin") ? detectedHeader : savedRawKey;
+    const { binToChar } = getDynamicMap(decodingKey);
     let result = "";
     
     for (let i = 6; i < cleanInput.length; i += 6) {
         let bin = cleanInput.substring(i, i + 6);
-        if (bin.length === 6) {
-            if (binToChar[bin] !== undefined) {
-                result += binToChar[bin];
-            } else {
-                result += "？";
-            }
-        }
+        if (bin.length === 6 && binToChar[bin] !== undefined) result += binToChar[bin];
+        else if (bin.length === 6) result += "？";
     }
     document.getElementById('outputText').value = result;
 }
 
 function copyResult() {
     const outputText = document.getElementById('outputText');
-    if (!outputText.value) {
-        alert("沒有內容可以複製！");
-        return;
-    }
+    if (!outputText.value) { alert("沒有內容可以複製！"); return; }
     outputText.select();
-    outputText.setSelectionRange(0, 99999);
-    navigator.clipboard.writeText(outputText.value).then(() => {
-        alert("📋 已成功複製到剪貼簿！");
-    }).catch(err => {
-        alert("複製失敗，請手動複製");
-    });
+    navigator.clipboard.writeText(outputText.value).then(() => alert("📋 已成功複製！"));
 }
 </script>
 </body>
