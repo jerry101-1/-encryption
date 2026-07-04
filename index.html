@@ -74,14 +74,14 @@
         <div id="adminMenuBlock" class="form-group hidden">
             <label for="encryptMode">⚙️ 管理員控制面板：切換加密通道</label>
             <select id="encryptMode">
-                <option value="000000" selected>成員一 (前綴: 000000/小魚)</option>
-                <option value="111111">成員二 (前綴: 111111/Kris)</option>
-                <option value="101010">成員三 (前綴: 101010 )</option>
-                <option value="010101">成員四 (前綴: 010101 )</option>
-                <option value="111000">成員五 (前綴: 111000 )</option>
-                <option value="000111">成員六 (前綴: 000111 )</option>
-                <option value="110011">成員七 (前綴: 110011 )</option>
-                <option value="001100">成員八 (前綴: 001100 )</option>
+                <option value="000000" selected>成員一 (小魚)</option>
+                <option value="111111">成員二 (Kris)</option>
+                <option value="101010">成員三 ()</option>
+                <option value="010101">成員四 ()</option>
+                <option value="111000">成員五 ()</option>
+                <option value="000111">成員六 ()</option>
+                <option value="110011">成員七 ()</option>
+                <option value="001100">成員八 ()</option>
             </select>
             <hr>
         </div>
@@ -211,6 +211,18 @@ function verifyPassword() {
             alert("❌ 密碼驗證失敗，拒絕存取！");
         }
     }
+}
+
+function showAllPasswords() {
+    if (currentRole !== "admin") return;
+    const currentPasswords = getLatestPasswords();
+    let msg = "📋 【全體成員金鑰密碼與神祕前綴對照表】\n\n";
+    const names = ["成員一 (小魚)", "成員二 (Kris)", "成員三", "成員四", "成員五", "成員六", "成員七", "成員八"];
+    
+    Object.keys(currentPasswords).forEach((prefix, i) => {
+        msg += `${names[i]} ➡️ 前綴: ${prefix} | 密碼: ${currentPasswords[prefix]}\n`;
+    });
+    alert(msg);
 }
 
 // 👑 管理員專屬功能：跳窗顯示所有人的密碼
