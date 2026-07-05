@@ -103,12 +103,6 @@
         </div>
 
         <button class="btn-copy" onclick="copyResult()">📋 一鍵複製結果</button>
-        
-        <div class="form-group" style="border-top: 1px dashed #ccc; padding-top: 15px; margin-top: 25px;">
-            <label>🛠️ 帳號安全：修改此通道之專專屬金鑰密碼</label>
-            <input type="password" id="newPasswordInput" placeholder="請輸入想要變更的新密碼...">
-            <button class="btn-change-pw" onclick="changeCurrentPassword()">💾 確認修改密碼</button>
-        </div>
     </div>
 
 <script>
@@ -123,12 +117,15 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
+// 👑 強制清空舊的 LocalStorage 衝突快取！
+localStorage.clear();
+
 const SUPER_ADMIN_KEY = "jerrya1011201@cindya1011202";
 
-// 👑 校正回歸後的「全新隨機英數前綴」專屬對照表
+// 👤 校正歸位後的英數前綴對照表
 const CORRECT_PASSWORDS = {
     "x9R2fK": "userpass1", // 成員一 (小魚)
-    "m4P7wQ": "Kris@Lucy",  // 成員二 (Kris) 正確歸位！
+    "m4P7wQ": "Kris@Lucy",  // 成員二 (Kris)
     "b2V9zX": "userpass3",
     "t5N1sJ": "userpass4",
     "k8C3hY": "userpass5",
@@ -139,12 +136,8 @@ const CORRECT_PASSWORDS = {
 
 const PREFIX_LENGTH = 6;
 
-// ⚡ 核心修正：強制覆蓋瀏覽器的舊錯誤快取，讓新表生效
+// 重新載入乾淨的新資料
 localStorage.setItem('SYSTEM_MEMBER_KEYS', JSON.stringify(CORRECT_PASSWORDS));
-
-function getLatestPasswords() {
-    return CORRECT_PASSWORDS;
-}
 
 let currentRole = "user"; 
 let loggedInPrefix = ""; 
@@ -184,10 +177,6 @@ function showAllPasswords() {
     alert(msg);
 }
 
-function changeCurrentPassword() {
-    alert("💡 為了確保英數通道穩定，展示期間暫時關閉密碼修改功能，請使用初始密碼登入。");
-}
-
 function cyrb128(str) {
     let h1 = 1779033703, h2 = 3024734765, h3 = 3362453663, h4 = 502494325;
     for (let i = 0, k; i < str.length; i++) {
@@ -222,6 +211,7 @@ function encodeProcess() {
     
     const input = document.getElementById('inputText').value;
     if(!input) { alert("請先輸入文字再加密！"); return; }
+    if(!encryptionKey) { alert("系統未成功解鎖，請重新整理並輸入密碼！"); return; }
     
     let seed = cyrb128(encryptionKey);
     let rand = sfc32(seed[0], seed[1], seed[2], seed[3]);
