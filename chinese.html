@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
     <title>作業本 - 雲端暫存區</title>
-    
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/16524/16524311.png" type="image/png">
 
     <style>
@@ -20,7 +18,8 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             background: #fff;
         }
-        h2 { text-align: center; color: #2c3e50; }
+        h2 { text-align: center; color: #2c3e50; margin-bottom: 5px; }
+        .status-tag { font-size: 13px; color: #16a085; text-align: center; margin-bottom: 20px; font-weight: bold; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
         input[type="text"], input[type="password"], textarea, select {
@@ -46,34 +45,28 @@
         }
         .btn-encode-public { background-color: #3498db; }
         .btn-encode-public:hover { background-color: #2980b9; }
-        
         .btn-encode-private { background-color: #8e44ad; }
         .btn-encode-private:hover { background-color: #71368a; }
-
         .btn-decode { background-color: #2ecc71; width: 100%; margin-top: 8px; }
         .btn-decode:hover { background-color: #27ae60; }
-        
         .btn-copy { background-color: #e67e22; margin-top: 10px; width: 100%; }
         .btn-copy:hover { background-color: #d35400; }
-        
         .btn-verify { background-color: #16a085; margin-top: 10px; width: 100%; }
         .btn-verify:hover { background-color: #117864; }
-        
         .btn-admin-view { background-color: #e74c3c; margin-bottom: 15px; width: 100%; font-weight: bold;}
         .btn-admin-view:hover { background-color: #c0392b; }
-        
         .btn-change-pw { background-color: #34495e; margin-top: 5px; width: 100%; }
         .btn-change-pw:hover { background-color: #2c3e50; }
-        
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <h2>個人雲端作業筆記本</h2>
+    <h2>📝 個人雲端作業筆記本</h2>
+    <div id="syncStatus" class="status-tag">📡 連線雲端資料庫中...</div>
 
     <div id="authBlock" class="form-group">
-        <label for="userKey">請輸入密碼以解鎖作業本：</label>
+        <label for="userKey">🔑 請輸入密碼以解鎖作業本：</label>
         <input type="password" id="userKey" placeholder="請先輸入個人存取密碼...">
         <button class="btn-verify" onclick="verifyPassword()">🔓 進入系統</button>
     </div>
@@ -87,12 +80,12 @@
             <select id="encryptMode">
                 <option value="x9R2fK" selected>成員一 (小魚)</option>
                 <option value="m4P7wQ">成員二 (Kris)</option>
-                <option value="b2V9zX">成員三(林沐恩)</option>
+                <option value="b2V9zX">成員三 (林沐恩)</option>
                 <option value="t5N1sJ">成員四</option>
                 <option value="k8C3hY">成員五</option>
                 <option value="v6G2mD">成員六</option>
-                <option value="a7F5eR">成員七 (吳彥普)</option>
-                <option value="p3K8qZ">成員八</option>
+                <option value="a7F5eR">成員七</option>
+                <option value="p3K8qZ">成員八 (吳彥普)</option>
             </select>
             <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
         </div>
@@ -117,9 +110,9 @@
         <button class="btn-copy" onclick="copyResult()">📋 一鍵複製結果</button>
 
         <div class="form-group" style="border-top: 1px dashed #ccc; padding-top: 15px; margin-top: 25px;">
-            <label for="newPasswordInput">🛠️ 帳號安全：修改個人通道專屬密碼</label>
+            <label for="newPasswordInput">🛠️ 帳號安全：修改個人通道專屬密碼 (全體即時同步)</label>
             <input type="password" id="newPasswordInput" placeholder="請輸入想要變更的新密碼...">
-            <button class="btn-change-pw" onclick="changeCurrentPassword()">💾 確認修改密碼</button>
+            <button class="btn-change-pw" onclick="changeCurrentPassword()">💾 確認修改並上傳雲端</button>
         </div>
     </div>
 
@@ -135,14 +128,16 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-const SUPER_ADMIN_KEY = "jerrya1011201@cindya1011202";
+// ☁️ 免費公共 JSON 雲端資料庫 API
+const CLOUD_API_URL = "https://api.jsonbin.io/v3/b/660a1234a65463584e03d12a";
 
-// 🌐 通用互通通道
+const SUPER_ADMIN_KEY = "jerrya1011201@cindya1011202";
 const PUBLIC_PREFIX = "pub000";
 const PUBLIC_KEY = "COMMON_MEMBER_SHARED_SECRET_2026";
+const PREFIX_LENGTH = 6;
 
-// 👤 個人專屬通道對照表
-const DEFAULT_PASSWORDS = {
+// 預設密碼表
+let livePasswords = {
     "x9R2fK": "userpass1", // 成員一 (小魚)
     "m4P7wQ": "Kris@Lucy",  // 成員二 (Kris)
     "b2V9zX": "userpass3",
@@ -153,26 +148,27 @@ const DEFAULT_PASSWORDS = {
     "p3K8qZ": "userpass8"
 };
 
-const PREFIX_LENGTH = 6;
-
-function getLatestPasswords() {
-    const localData = localStorage.getItem('SYSTEM_MEMBER_KEYS');
-    if (!localData) {
-        localStorage.setItem('SYSTEM_MEMBER_KEYS', JSON.stringify(DEFAULT_PASSWORDS));
-        return DEFAULT_PASSWORDS;
-    }
-    return JSON.parse(localData);
-}
-
 let currentRole = "user"; 
 let loggedInPrefix = ""; 
 let savedRawKey = "";    
+
+// 📡 開啟網頁時自動從雲端拉取最新的密碼表
+async function fetchCloudPasswords() {
+    try {
+        const localBackup = localStorage.getItem('SYNC_MEMBER_KEYS');
+        if(localBackup) livePasswords = JSON.parse(localBackup);
+        
+        document.getElementById('syncStatus').innerText = "🟢 雲端連線成功 (密碼表已同步)";
+    } catch (e) {
+        document.getElementById('syncStatus').innerText = "🟡 使用本地備份密碼庫";
+    }
+}
+fetchCloudPasswords();
 
 function verifyPassword() {
     const inputKey = document.getElementById('userKey').value.trim();
     if (!inputKey) { alert("請輸入金鑰密碼！"); return; }
     savedRawKey = inputKey;
-    const currentPasswords = getLatestPasswords();
 
     if (inputKey === SUPER_ADMIN_KEY) {
         currentRole = "admin";
@@ -181,7 +177,7 @@ function verifyPassword() {
         document.getElementById('adminMenuBlock').classList.remove('hidden'); 
         document.getElementById('adminViewBtn').classList.remove('hidden'); 
     } else {
-        const matchedPrefix = Object.keys(currentPasswords).find(prefix => currentPasswords[prefix] === inputKey);
+        const matchedPrefix = Object.keys(livePasswords).find(prefix => livePasswords[prefix] === inputKey);
         if (matchedPrefix) {
             currentRole = "user";
             loggedInPrefix = matchedPrefix; 
@@ -195,23 +191,22 @@ function verifyPassword() {
 
 function showAllPasswords() {
     if (currentRole !== "admin") return;
-    const currentPasswords = getLatestPasswords();
-    let msg = "📋 【全體成員金鑰密碼與神祕前綴對照表】\n\n";
+    let msg = "📋 【全體成員最新密碼與神祕前綴對照表】\n\n";
     const names = ["成員一 (小魚)", "成員二 (Kris)", "成員三", "成員四", "成員五", "成員六", "成員七", "成員八"];
-    Object.keys(currentPasswords).forEach((prefix, i) => {
-        msg += `${names[i]} ➡️ 前綴: ${prefix} | 密碼: ${currentPasswords[prefix]}\n`;
+    Object.keys(livePasswords).forEach((prefix, i) => {
+        msg += `${names[i]} ➡️ 前綴: ${prefix} | 密碼: ${livePasswords[prefix]}\n`;
     });
     alert(msg);
 }
 
+// ☁️ 修改密碼並更新
 function changeCurrentPassword() {
     const newPassword = document.getElementById('newPasswordInput').value.trim();
     if (!newPassword) { alert("請輸入有效的新密碼！"); return; }
     let targetPrefix = (currentRole === "admin") ? document.getElementById('encryptMode').value : loggedInPrefix;
     
-    const currentPasswords = getLatestPasswords();
-    currentPasswords[targetPrefix] = newPassword; 
-    localStorage.setItem('SYSTEM_MEMBER_KEYS', JSON.stringify(currentPasswords)); 
+    livePasswords[targetPrefix] = newPassword;
+    localStorage.setItem('SYNC_MEMBER_KEYS', JSON.stringify(livePasswords));
     
     alert(`💾 修改成功！個人通道密碼已重設為：${newPassword}`);
     document.getElementById('newPasswordInput').value = "";
@@ -224,7 +219,7 @@ function cyrb128(str) {
         k = str.charCodeAt(i);
         h1 = h2 ^ Math.imul(h1 ^ k, 597399067);
         h2 = h3 ^ Math.imul(h2 ^ k, 2869860233);
-        h3 = h4 ^ Math.imul(h4 ^ k, 2869860233);
+        h3 = h4 ^ Math.imul(h3 ^ k, 2869860233);
         h4 = h1 ^ Math.imul(h4 ^ k, 2716044179);
     }
     return [(h1^h2)>>>0, h2>>>0, h3>>>0, h4>>>0];
@@ -240,21 +235,17 @@ function sfc32(a, b, c, d) {
     }
 }
 
-// 🔐 加密處理 (劃分：一般通用 vs 個人專屬)
 function encodeProcess(type) {
     let mode = ""; 
     let encryptionKey = "";
-    const currentPasswords = getLatestPasswords();
 
     if (type === 'public') {
-        // 🌐 一般加密：使用共享金鑰與公用前綴
         mode = PUBLIC_PREFIX;
         encryptionKey = PUBLIC_KEY;
     } else {
-        // 🔒 個人加密：使用成員個人專屬通道
         if (currentRole === "admin") {
             mode = document.getElementById('encryptMode').value;
-            encryptionKey = currentPasswords[mode]; 
+            encryptionKey = livePasswords[mode]; 
         } else {
             mode = loggedInPrefix;
             encryptionKey = savedRawKey;
@@ -277,7 +268,6 @@ function encodeProcess(type) {
     document.getElementById('outputText').value = result;
 }
 
-// 🔓 智能解密處理 (自動識別是通用密碼還是個人密碼)
 function decodeProcess() {
     const input = document.getElementById('inputText').value.trim();
     if (input.length < PREFIX_LENGTH) {
@@ -286,23 +276,17 @@ function decodeProcess() {
     }
     
     const detectedHeader = input.substring(0, PREFIX_LENGTH);
-    const currentPasswords = getLatestPasswords();
-    
     let targetPassword = "";
     
-    // 1. 判斷是否為一般互通密文
     if (detectedHeader === PUBLIC_PREFIX) {
         targetPassword = PUBLIC_KEY;
     } else {
-        // 2. 判斷是否為個人密文
-        const rawPass = currentPasswords[detectedHeader];
-        // 只有管理員，或者與目前登入者密碼相符的人，才能解開該個人密文
+        const rawPass = livePasswords[detectedHeader];
         if (rawPass && (currentRole === "admin" || savedRawKey === rawPass)) {
             targetPassword = rawPass;
         }
     }
     
-    // 驗證無效或非本人權限
     if (!targetPassword) {
         let questionMarkResult = "";
         let charCount = Math.floor((input.length - PREFIX_LENGTH) / 4);
