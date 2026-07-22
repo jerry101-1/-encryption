@@ -32,29 +32,39 @@
             font-size: 16px;
         }
         textarea { height: 100px; resize: vertical; }
-        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
         button {
             flex: 1;
             padding: 12px;
             border: none;
             border-radius: 4px;
             color: white;
-            font-size: 16px;
+            font-size: 15px;
             cursor: pointer;
             transition: background 0.2s;
+            min-width: 140px;
         }
-        .btn-encode { background-color: #3498db; }
-        .btn-encode:hover { background-color: #2980b9; }
-        .btn-decode { background-color: #2ecc71; }
+        .btn-encode-public { background-color: #3498db; }
+        .btn-encode-public:hover { background-color: #2980b9; }
+        
+        .btn-encode-private { background-color: #8e44ad; }
+        .btn-encode-private:hover { background-color: #71368a; }
+
+        .btn-decode { background-color: #2ecc71; width: 100%; margin-top: 8px; }
         .btn-decode:hover { background-color: #27ae60; }
-        .btn-copy { background-color: #e67e22; }
+        
+        .btn-copy { background-color: #e67e22; margin-top: 10px; width: 100%; }
         .btn-copy:hover { background-color: #d35400; }
-        .btn-verify { background-color: #9b59b6; margin-top: 10px; width: 100%; }
-        .btn-verify:hover { background-color: #8e44ad; }
+        
+        .btn-verify { background-color: #16a085; margin-top: 10px; width: 100%; }
+        .btn-verify:hover { background-color: #117864; }
+        
         .btn-admin-view { background-color: #e74c3c; margin-bottom: 15px; width: 100%; font-weight: bold;}
         .btn-admin-view:hover { background-color: #c0392b; }
+        
         .btn-change-pw { background-color: #34495e; margin-top: 5px; width: 100%; }
         .btn-change-pw:hover { background-color: #2c3e50; }
+        
         .hidden { display: none !important; }
     </style>
 </head>
@@ -73,7 +83,7 @@
         <button id="adminViewBtn" class="btn-admin-view hidden" onclick="showAllPasswords()">👁️ 查看全體成員最新密碼與神祕前綴</button>
         
         <div id="adminMenuBlock" class="form-group hidden">
-            <label for="encryptMode">⚙️ 管理員控制面板：切換加密通道</label>
+            <label for="encryptMode">⚙️ 管理員控制面板：切換個人加密對象</label>
             <select id="encryptMode">
                 <option value="x9R2fK" selected>成員一 (小魚)</option>
                 <option value="m4P7wQ">成員二 (Kris)</option>
@@ -88,14 +98,16 @@
         </div>
 
         <div class="form-group">
-            <label for="inputText">📝 輸入內文字（高級偽裝、英數混淆版）：</label>
-            <textarea id="inputText" placeholder="加密：輸入任意文字...&#10;解密：直接貼上包含神祕前綴的密文，系統會自動辨識還原..."></textarea>
+            <label for="inputText">📝 輸入內文字：</label>
+            <textarea id="inputText" placeholder="加密：輸入任意文字...&#10;解密：貼上密文並點擊下方「解密」..."></textarea>
         </div>
 
         <div class="btn-group">
-            <button class="btn-encode" onclick="encodeProcess()">加密</button>
-            <button class="btn-decode" onclick="decodeProcess()">解密</button>
+            <button class="btn-encode-public" onclick="encodeProcess('public')">🌐 一般加密 (全員互通)</button>
+            <button class="btn-encode-private" onclick="encodeProcess('private')">🔒 個人專用加密</button>
         </div>
+        
+        <button class="btn-decode" onclick="decodeProcess()">🔓 辨識並解密</button>
 
         <div class="form-group" style="margin-top: 20px;">
             <label for="outputText">✨ 處理結果輸出：</label>
@@ -103,6 +115,12 @@
         </div>
 
         <button class="btn-copy" onclick="copyResult()">📋 一鍵複製結果</button>
+
+        <div class="form-group" style="border-top: 1px dashed #ccc; padding-top: 15px; margin-top: 25px;">
+            <label for="newPasswordInput">🛠️ 帳號安全：修改個人通道專屬密碼</label>
+            <input type="password" id="newPasswordInput" placeholder="請輸入想要變更的新密碼...">
+            <button class="btn-change-pw" onclick="changeCurrentPassword()">💾 確認修改密碼</button>
+        </div>
     </div>
 
 <script>
@@ -117,13 +135,14 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// 👑 強制清空舊的 LocalStorage 衝突快取！
-localStorage.clear();
-
 const SUPER_ADMIN_KEY = "jerrya1011201@cindya1011202";
 
-// 👤 校正歸位後的英數前綴對照表
-const CORRECT_PASSWORDS = {
+// 🌐 通用互通通道
+const PUBLIC_PREFIX = "pub000";
+const PUBLIC_KEY = "COMMON_MEMBER_SHARED_SECRET_2026";
+
+// 👤 個人專屬通道對照表
+const DEFAULT_PASSWORDS = {
     "x9R2fK": "userpass1", // 成員一 (小魚)
     "m4P7wQ": "Kris@Lucy",  // 成員二 (Kris)
     "b2V9zX": "userpass3",
@@ -136,8 +155,14 @@ const CORRECT_PASSWORDS = {
 
 const PREFIX_LENGTH = 6;
 
-// 重新載入乾淨的新資料
-localStorage.setItem('SYSTEM_MEMBER_KEYS', JSON.stringify(CORRECT_PASSWORDS));
+function getLatestPasswords() {
+    const localData = localStorage.getItem('SYSTEM_MEMBER_KEYS');
+    if (!localData) {
+        localStorage.setItem('SYSTEM_MEMBER_KEYS', JSON.stringify(DEFAULT_PASSWORDS));
+        return DEFAULT_PASSWORDS;
+    }
+    return JSON.parse(localData);
+}
 
 let currentRole = "user"; 
 let loggedInPrefix = ""; 
@@ -147,6 +172,7 @@ function verifyPassword() {
     const inputKey = document.getElementById('userKey').value.trim();
     if (!inputKey) { alert("請輸入金鑰密碼！"); return; }
     savedRawKey = inputKey;
+    const currentPasswords = getLatestPasswords();
 
     if (inputKey === SUPER_ADMIN_KEY) {
         currentRole = "admin";
@@ -155,7 +181,7 @@ function verifyPassword() {
         document.getElementById('adminMenuBlock').classList.remove('hidden'); 
         document.getElementById('adminViewBtn').classList.remove('hidden'); 
     } else {
-        const matchedPrefix = Object.keys(CORRECT_PASSWORDS).find(prefix => CORRECT_PASSWORDS[prefix] === inputKey);
+        const matchedPrefix = Object.keys(currentPasswords).find(prefix => currentPasswords[prefix] === inputKey);
         if (matchedPrefix) {
             currentRole = "user";
             loggedInPrefix = matchedPrefix; 
@@ -169,12 +195,27 @@ function verifyPassword() {
 
 function showAllPasswords() {
     if (currentRole !== "admin") return;
+    const currentPasswords = getLatestPasswords();
     let msg = "📋 【全體成員金鑰密碼與神祕前綴對照表】\n\n";
     const names = ["成員一 (小魚)", "成員二 (Kris)", "成員三", "成員四", "成員五", "成員六", "成員七", "成員八"];
-    Object.keys(CORRECT_PASSWORDS).forEach((prefix, i) => {
-        msg += `${names[i]} ➡️ 前綴: ${prefix} | 密碼: ${CORRECT_PASSWORDS[prefix]}\n`;
+    Object.keys(currentPasswords).forEach((prefix, i) => {
+        msg += `${names[i]} ➡️ 前綴: ${prefix} | 密碼: ${currentPasswords[prefix]}\n`;
     });
     alert(msg);
+}
+
+function changeCurrentPassword() {
+    const newPassword = document.getElementById('newPasswordInput').value.trim();
+    if (!newPassword) { alert("請輸入有效的新密碼！"); return; }
+    let targetPrefix = (currentRole === "admin") ? document.getElementById('encryptMode').value : loggedInPrefix;
+    
+    const currentPasswords = getLatestPasswords();
+    currentPasswords[targetPrefix] = newPassword; 
+    localStorage.setItem('SYSTEM_MEMBER_KEYS', JSON.stringify(currentPasswords)); 
+    
+    alert(`💾 修改成功！個人通道密碼已重設為：${newPassword}`);
+    document.getElementById('newPasswordInput').value = "";
+    if (currentRole !== "admin") savedRawKey = newPassword;
 }
 
 function cyrb128(str) {
@@ -199,19 +240,29 @@ function sfc32(a, b, c, d) {
     }
 }
 
-function encodeProcess() {
-    let mode = ""; let encryptionKey = "";
-    if (currentRole === "admin") {
-        mode = document.getElementById('encryptMode').value;
-        encryptionKey = CORRECT_PASSWORDS[mode]; 
+// 🔐 加密處理 (劃分：一般通用 vs 個人專屬)
+function encodeProcess(type) {
+    let mode = ""; 
+    let encryptionKey = "";
+    const currentPasswords = getLatestPasswords();
+
+    if (type === 'public') {
+        // 🌐 一般加密：使用共享金鑰與公用前綴
+        mode = PUBLIC_PREFIX;
+        encryptionKey = PUBLIC_KEY;
     } else {
-        mode = loggedInPrefix;
-        encryptionKey = savedRawKey;
+        // 🔒 個人加密：使用成員個人專屬通道
+        if (currentRole === "admin") {
+            mode = document.getElementById('encryptMode').value;
+            encryptionKey = currentPasswords[mode]; 
+        } else {
+            mode = loggedInPrefix;
+            encryptionKey = savedRawKey;
+        }
     }
     
     const input = document.getElementById('inputText').value;
     if(!input) { alert("請先輸入文字再加密！"); return; }
-    if(!encryptionKey) { alert("系統未成功解鎖，請重新整理並輸入密碼！"); return; }
     
     let seed = cyrb128(encryptionKey);
     let rand = sfc32(seed[0], seed[1], seed[2], seed[3]);
@@ -226,6 +277,7 @@ function encodeProcess() {
     document.getElementById('outputText').value = result;
 }
 
+// 🔓 智能解密處理 (自動識別是通用密碼還是個人密碼)
 function decodeProcess() {
     const input = document.getElementById('inputText').value.trim();
     if (input.length < PREFIX_LENGTH) {
@@ -234,9 +286,24 @@ function decodeProcess() {
     }
     
     const detectedHeader = input.substring(0, PREFIX_LENGTH);
-    const targetPassword = CORRECT_PASSWORDS[detectedHeader];
+    const currentPasswords = getLatestPasswords();
     
-    if (!targetPassword || (currentRole !== "admin" && savedRawKey !== targetPassword)) {
+    let targetPassword = "";
+    
+    // 1. 判斷是否為一般互通密文
+    if (detectedHeader === PUBLIC_PREFIX) {
+        targetPassword = PUBLIC_KEY;
+    } else {
+        // 2. 判斷是否為個人密文
+        const rawPass = currentPasswords[detectedHeader];
+        // 只有管理員，或者與目前登入者密碼相符的人，才能解開該個人密文
+        if (rawPass && (currentRole === "admin" || savedRawKey === rawPass)) {
+            targetPassword = rawPass;
+        }
+    }
+    
+    // 驗證無效或非本人權限
+    if (!targetPassword) {
         let questionMarkResult = "";
         let charCount = Math.floor((input.length - PREFIX_LENGTH) / 4);
         for (let i = 0; i < charCount; i++) questionMarkResult += "？";
