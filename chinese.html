@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>作業本 - 雲端暫存區</title>
+    <title>首頁</title>
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/16524/16524311.png" type="image/png">
 
     <style>
@@ -62,11 +62,11 @@
 </head>
 <body>
 
-    <h2>📝 個人雲端作業筆記本</h2>
+    <h2>📝筆記本</h2>
     <div id="syncStatus" class="status-tag">📡 連線雲端資料庫中...</div>
 
     <div id="authBlock" class="form-group">
-        <label for="userKey">🔑 請輸入密碼以解鎖作業本：</label>
+        <label for="userKey">🔑 請輸入密碼以解鎖：</label>
         <input type="password" id="userKey" placeholder="請先輸入個人存取密碼...">
         <button class="btn-verify" onclick="verifyPassword()">🔓 進入系統</button>
     </div>
@@ -96,11 +96,13 @@
         </div>
 
         <div class="btn-group">
-            <button class="btn-encode-public" onclick="encodeProcess('public')">🌐 一般加密 (全員互通)</button>
-            <button class="btn-encode-private" onclick="encodeProcess('private')">🔒 個人專用加密</button>
+            <button class="btn-encode-public" onclick="encodeProcess('public')">🌐 全員互通</button>
+            <button class="btn-encode-private" onclick="encodeProcess('private')">🔒 加密</button>
         </div>
         
         <button class="btn-decode" onclick="decodeProcess()">🔓 辨識並解密</button>
+
+!!      </const>
 
         <div class="form-group" style="margin-top: 20px;">
             <label for="outputText">✨ 處理結果輸出：</label>
@@ -110,9 +112,9 @@
         <button class="btn-copy" onclick="copyResult()">📋 一鍵複製結果</button>
 
         <div class="form-group" style="border-top: 1px dashed #ccc; padding-top: 15px; margin-top: 25px;">
-            <label for="newPasswordInput">🛠️ 帳號安全：修改個人通道專屬密碼 (全體即時同步)</label>
+            <label for="newPasswordInput">🛠️ 修改個人密碼</label>
             <input type="password" id="newPasswordInput" placeholder="請輸入想要變更的新密碼...">
-            <button class="btn-change-pw" onclick="changeCurrentPassword()">💾 確認修改並上傳雲端</button>
+            <button class="btn-change-pw" onclick="changeCurrentPassword()">💾 確認修改</button>
         </div>
     </div>
 
