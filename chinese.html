@@ -136,51 +136,41 @@
 
         <button class="btn-changelog" onclick="toggleChangelog()">📜 檢視系統更新日誌 (Changelog)</button>
         <div id="changelogBox" class="changelog-box hidden">
-            <div id="changelogBox" class="changelog-box hidden">
-    
-    <div class="changelog-item">
-        <span class="changelog-version">v3.0.0 (軍規級安全大改版)</span> <span class="changelog-date">2026/07</span>
-        <ul>
-            <li><b>🔐 加密核心升級：</b>棄用自訂位移算術，改採用國際標準 Web Crypto API (AES-256-GCM)。</li>
-            <li><b>🛡️ 抗暴力破解強化：</b>導入 PBKDF2 金鑰衍生演算法，設定 100,000 次雜湊疊代，大幅拉高顯卡爆破門檻。</li>
-            <li><b>🎲 硬體級亂數：</b>改用作業系統級真隨機數 (Crypto.getRandomValues) 產生一次性 Salt 與 IV。</li>
-            <li><b>🔍 資料防篡改機制：</b>活用 GCM 模式標籤驗證，若密文遭篡改或密碼錯誤，系統會自動警告。</li>
-            <li><b>✨ 介面精簡化：</b>完全移除密文顯性前綴（Prefix），提升密文隱蔽性並優化顯示長度。</li>
-        </ul>
-    </div>
-
-    <div class="changelog-item">
-        <span class="changelog-version">v2.1.0 (體驗與對齊優化)</span> <span class="changelog-date">2026/07</span>
-        <ul>
-            <li><b>⚡ 即時自動解密：</b>新增監聽事件，滑鼠貼上或手動輸入密文時自動辨識並執行解密。</li>
-            <li><b>📋 排版優化：</b>管理員成員對照表彈窗改用條列式階層呈現，解決跨裝置字型無法對齊的問題。</li>
-            <li><b>🛡️ 前端安全防禦：</b>加入右鍵選單封鎖與 F12 開發者工具快捷鍵阻擋指令。</li>
-        </ul>
-    </div>
-
-    <div class="changelog-item">
-        <span class="changelog-version">v2.0.0 (多成員與權限系統)</span> <span class="changelog-date">2026/06</span>
-        <ul>
-            <li><b>👥 多通道隔離：</b>新增 8 組成員專屬通道，實現個人密文獨立加密。</li>
-            <li><b>🔑 管理員模式：</b>加入超級管理員密碼，可查看全體成員當前密碼與設定狀態。</li>
-            <li><b>🌐 全員互通功能：</b>新增公用加密通道，支援群組共享訊息解密。</li>
-            <li><b>🛠️ 密碼自訂：</b>新增個人密碼修改功能，並同步儲存至本地快取 (LocalStorage)。</li>
-        </ul>
-    </div>
-
-    <div class="changelog-item">
-        <span class="changelog-version">v1.0.0 (系統初版上線)</span> <span class="changelog-date">2026/05</span>
-        <ul>
-            <li><b>🚀 基礎功能：</b>建立純前端筆記本加解密介面與一鍵複製結果按鈕。</li>
-            <li><b>🎨 視覺設計：</b>採用 RWD 響應式卡片風格設計。</li>
-        </ul>
-    </div>
-
-</div>
-                <span class="changelog-version">v1.0.0</span>
+            <div class="changelog-item">
+                <span class="changelog-version">v3.0.0 (軍規級安全大改版)</span> <span class="changelog-date">2026/07</span>
                 <ul>
-                    <li>🚀 筆記本加解密基礎系統上線。</li>
-                    <li>☁️ 支援個人專屬通道與雲端密碼同步。</li>
+                    <li><b>🔐 加密核心升級：</b>棄用自訂位移算術，改採用國際標準 Web Crypto API (AES-256-GCM)。</li>
+                    <li><b>🛡️ 抗暴力破解強化：</b>導入 PBKDF2 金鑰衍生演算法，設定 100,000 次雜湊疊代，大幅拉高顯卡爆破門檻。</li>
+                    <li><b>🎲 硬體級亂數：</b>改用作業系統級真隨機數 (Crypto.getRandomValues) 產生一次性 Salt 與 IV。</li>
+                    <li><b>🔍 資料防篡改機制：</b>活用 GCM 模式標籤驗證，若密文遭篡改或密碼錯誤，系統會自動警告。</li>
+                    <li><b>✨ 介面精簡化：</b>完全移除密文顯性前綴（Prefix），提升密文隱蔽性並優化顯示長度。</li>
+                </ul>
+            </div>
+
+            <div class="changelog-item">
+                <span class="changelog-version">v2.1.0 (體驗與對齊優化)</span> <span class="changelog-date">2026/07</span>
+                <ul>
+                    <li><b>⚡ 即時自動解密：</b>新增監聽事件，滑鼠貼上或手動輸入密文時自動辨識並執行解密。</li>
+                    <li><b>📋 排版優化：</b>管理員成員對照表彈窗改用條列式階層呈現，解決跨裝置字型無法對齊的問題。</li>
+                    <li><b>🛡️ 前端安全防禦：</b>加入右鍵選單封鎖與 F12 開發者工具快捷鍵阻擋指令。</li>
+                </ul>
+            </div>
+
+            <div class="changelog-item">
+                <span class="changelog-version">v2.0.0 (多成員與權限系統)</span> <span class="changelog-date">2026/06</span>
+                <ul>
+                    <li><b>👥 多通道隔離：</b>新增 8 組成員專屬通道，實現個人密文獨立加密。</li>
+                    <li><b>🔑 管理員模式：</b>加入超級管理員密碼，可查看全體成員當前密碼與設定狀態。</li>
+                    <li><b>🌐 全員互通功能：</b>新增公用加密通道，支援群組共享訊息解密。</li>
+                    <li><b>🛠️ 密碼自訂：</b>新增個人密碼修改功能，並同步儲存至本地快取 (LocalStorage)。</li>
+                </ul>
+            </div>
+
+            <div class="changelog-item">
+                <span class="changelog-version">v1.0.0 (系統初版上線)</span> <span class="changelog-date">2026/05</span>
+                <ul>
+                    <li><b>🚀 基礎功能：</b>建立純前端筆記本加解密介面與一鍵複製結果按鈕。</li>
+                    <li><b>🎨 視覺設計：</b>採用 RWD 響應式卡片風格設計。</li>
                 </ul>
             </div>
         </div>
