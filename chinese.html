@@ -177,7 +177,7 @@ async function fetchCloudPasswords() {
     try {
         const localBackup = localStorage.getItem('SYNC_MEMBER_KEYS');
         if(localBackup) livePasswords = JSON.parse(localBackup);
-        document.getElementById('syncStatus').innerText = "🟢 系統連線正常 (AES-256 就緒)";
+        document.getElementById('syncStatus').innerText = "🟢 連線正常";
     } catch (e) {
         document.getElementById('syncStatus').innerText = "🟡 系統就緒";
     }
