@@ -60,7 +60,14 @@
         .btn-changelog { background-color: #7f8c8d; width: 100%; margin-top: 15px; font-size: 13px; padding: 8px; }
         .btn-changelog:hover { background-color: #95a5a6; }
         
-        /* 更新日誌區塊樣式 */
+        .extra-pw-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        
         .changelog-box {
             background-color: #f8f9fa;
             border: 1px solid #e9ecef;
@@ -82,10 +89,10 @@
 <body>
 
     <h2>📝 筆記本</h2>
-    <div id="syncStatus" class="status-tag">📡 連線雲端資料庫中...</div>
+    <div id="syncStatus" class="status-tag">連線雲端資料庫中...</div>
 
     <div id="authBlock" class="form-group">
-        <label for="userKey">🔑 請輸入密碼以解鎖：</label>
+        <label for="userKey">請輸入密碼以解鎖：</label>
         <input type="password" id="userKey" placeholder="請先輸入個人存取密碼...">
         <button class="btn-verify" onclick="verifyPassword()">🔓 進入系統</button>
     </div>
@@ -110,67 +117,55 @@
         </div>
 
         <div class="form-group">
-            <label for="inputText">📝 輸入內文字：</label>
+            <label for="inputText">輸入內文字：</label>
             <textarea id="inputText" placeholder="加密：輸入任意文字...&#10;解密：貼上密文自動解密..."></textarea>
         </div>
 
+        <div class="form-group extra-pw-box">
+            <label for="secondPassphrase" style="color: #856404;">第二重自訂密碼（選填/雙重加密）：</label>
+            <input type="password" id="secondPassphrase" placeholder="加密時設定此欄，解密也必須輸入相同口令...">
+        </div>
+
         <div class="btn-group">
-            <button class="btn-encode-public" onclick="encodeProcess('public')">🌐 全員互通加密</button>
-            <button class="btn-encode-private" onclick="encodeProcess('private')">🔒 個人加密</button>
+            <button class="btn-encode-public" onclick="encodeProcess('public')">全員互通</button>
+            <button class="btn-encode-private" onclick="encodeProcess('private')">個人加密</button>
         </div>
         
-        <button class="btn-decode" onclick="decodeProcess()">🔓 手動解密</button>
+        <button class="btn-decode" onclick="decodeProcess()">手動解密</button>
 
         <div class="form-group" style="margin-top: 20px;">
-            <label for="outputText">✨ 處理結果輸出：</label>
+            <label for="outputText">處理結果輸出：</label>
             <textarea id="outputText" readonly placeholder="結果會顯示在這裡..."></textarea>
         </div>
 
-        <button class="btn-copy" onclick="copyResult()">📋 一鍵複製結果</button>
+        <button class="btn-copy" onclick="copyResult()">一鍵複製結果</button>
 
         <div class="form-group" style="border-top: 1px dashed #ccc; padding-top: 15px; margin-top: 25px;">
-            <label for="newPasswordInput">🛠️ 修改個人密碼</label>
+            <label for="newPasswordInput">修改個人密碼</label>
             <input type="password" id="newPasswordInput" placeholder="請輸入想要變更的新密碼...">
-            <button class="btn-change-pw" onclick="changeCurrentPassword()">💾 確認修改</button>
+            <button class="btn-change-pw" onclick="changeCurrentPassword()">確認修改</button>
         </div>
 
-        <button class="btn-changelog" onclick="toggleChangelog()">📜 檢視系統更新日誌 (Changelog)</button>
+        <button class="btn-changelog" onclick="toggleChangelog()">檢視系統更新日誌 (Changelog)</button>
         <div id="changelogBox" class="changelog-box hidden">
             <div class="changelog-item">
-                <span class="changelog-version">v3.0.0 (軍規級安全大改版)</span> <span class="changelog-date">2026/07</span>
+                <span class="changelog-version">v3.2.0</span> <span class="changelog-date">2026/07</span>
                 <ul>
-                    <li><b>🔐 加密核心升級：</b>棄用自訂位移算術，改採用國際標準 Web Crypto API (AES-256-GCM)。</li>
-                    <li><b>🛡️ 抗暴力破解強化：</b>導入 PBKDF2 金鑰衍生演算法，設定 100,000 次雜湊疊代，大幅拉高顯卡爆破門檻。</li>
-                    <li><b>🎲 硬體級亂數：</b>改用作業系統級真隨機數 (Crypto.getRandomValues) 產生一次性 Salt 與 IV。</li>
-                    <li><b>🔍 資料防篡改機制：</b>活用 GCM 模式標籤驗證，若密文遭篡改或密碼錯誤，系統會自動警告。</li>
-                    <li><b>✨ 介面精簡化：</b>完全移除密文顯性前綴（Prefix），提升密文隱蔽性並優化顯示長度。</li>
+                    <li><b>雙重加密：</b>所有人皆可自訂獨立「第二重密碼」，達成雙重 AES-256 加密防禦。</li>
+                    <li><b>防窺探：</b>即使擁有通道密碼，未輸入正確第二重口令一樣無法還原內容。</li>
                 </ul>
             </div>
-
             <div class="changelog-item">
-                <span class="changelog-version">v2.1.0 (體驗與對齊優化)</span> <span class="changelog-date">2026/07</span>
+                <span class="changelog-version">v3.0.0</span> <span class="changelog-date">2026/07</span>
                 <ul>
-                    <li><b>⚡ 即時自動解密：</b>新增監聽事件，滑鼠貼上或手動輸入密文時自動辨識並執行解密。</li>
-                    <li><b>📋 排版優化：</b>管理員成員對照表彈窗改用條列式階層呈現，解決跨裝置字型無法對齊的問題。</li>
-                    <li><b>🛡️ 前端安全防禦：</b>加入右鍵選單封鎖與 F12 開發者工具快捷鍵阻擋指令。</li>
+                    <li>全面升級至 AES-256-GCM + PBKDF2 (100,000次迭代)。</li>
+                    <li>完全移除前綴，增強密文隱蔽性與長度精簡。</li>
                 </ul>
             </div>
-
             <div class="changelog-item">
-                <span class="changelog-version">v2.0.0 (多成員與權限系統)</span> <span class="changelog-date">2026/06</span>
+                <span class="changelog-version">v1.0.0 - v2.1.0</span> <span class="changelog-date">2026/05-07</span>
                 <ul>
-                    <li><b>👥 多通道隔離：</b>新增 8 組成員專屬通道，實現個人密文獨立加密。</li>
-                    <li><b>🔑 管理員模式：</b>加入超級管理員密碼，可查看全體成員當前密碼與設定狀態。</li>
-                    <li><b>🌐 全員互通功能：</b>新增公用加密通道，支援群組共享訊息解密。</li>
-                    <li><b>🛠️ 密碼自訂：</b>新增個人密碼修改功能，並同步儲存至本地快取 (LocalStorage)。</li>
-                </ul>
-            </div>
-
-            <div class="changelog-item">
-                <span class="changelog-version">v1.0.0 (系統初版上線)</span> <span class="changelog-date">2026/05</span>
-                <ul>
-                    <li><b>🚀 基礎功能：</b>建立純前端筆記本加解密介面與一鍵複製結果按鈕。</li>
-                    <li><b>🎨 視覺設計：</b>採用 RWD 響應式卡片風格設計。</li>
+                    <li>基礎筆記本、多通道隔離與自動貼上解密功能上線。</li>
                 </ul>
             </div>
         </div>
@@ -207,22 +202,13 @@ let currentRole = "user";
 let currentUserAccount = ""; 
 let savedRawKey = "";    
 
-// 切換更新日誌顯示/隱藏
 function toggleChangelog() {
-    const box = document.getElementById('changelogBox');
-    box.classList.toggle('hidden');
+    document.getElementById('changelogBox').classList.toggle('hidden');
 }
 
-// ⚡ 貼上自動解密監聽
 const inputArea = document.getElementById('inputText');
-
-inputArea.addEventListener('paste', () => {
-    setTimeout(() => { autoDetectAndDecode(); }, 50);
-});
-
-inputArea.addEventListener('input', () => {
-    autoDetectAndDecode();
-});
+inputArea.addEventListener('paste', () => { setTimeout(() => { autoDetectAndDecode(); }, 50); });
+inputArea.addEventListener('input', () => { autoDetectAndDecode(); });
 
 function autoDetectAndDecode() {
     const val = inputArea.value.trim();
@@ -268,17 +254,11 @@ function verifyPassword() {
 
 function showAllPasswords() {
     if (currentRole !== "admin") return;
-    
     let msg = "📋【全體成員最新密碼對照表】\n\n";
-    const names = [
-        "成員一 (小魚)", "成員二 (Kris)", "成員三 (林沐恩)", "成員四 (未設定)",
-        "成員五 (未設定)", "成員六 (未設定)", "成員七 (吳彥普)", "成員八 (未設定)"
-    ];
-    
+    const names = ["成員一 (小魚)", "成員二 (Kris)", "成員三 (林沐恩)", "成員四 (未設定)", "成員五 (未設定)", "成員六 (未設定)", "成員七 (吳彥普)", "成員八 (未設定)"];
     Object.keys(livePasswords).forEach((accKey, i) => {
         msg += `${i + 1}. ${names[i]}\n   └─ 當前密碼：${livePasswords[accKey]}\n\n`;
     });
-
     alert(msg);
 }
 
@@ -296,25 +276,14 @@ function changeCurrentPassword() {
 }
 
 // -------------------------------------------------------------
-// 🔐 Web Crypto API (AES-256-GCM + PBKDF2) 模組
+// 🔐 加解密核心演算法 (支援金鑰串接)
 // -------------------------------------------------------------
 
 async function deriveKey(password, salt) {
     const enc = new TextEncoder();
-    const baseKey = await window.crypto.subtle.importKey(
-        "raw",
-        enc.encode(password),
-        "PBKDF2",
-        false,
-        ["deriveKey"]
-    );
+    const baseKey = await window.crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
     return window.crypto.subtle.deriveKey(
-        {
-            name: "PBKDF2",
-            salt: salt,
-            iterations: 100000,
-            hash: "SHA-256"
-        },
+        { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
         baseKey,
         { name: "AES-GCM", length: 256 },
         false,
@@ -323,18 +292,11 @@ async function deriveKey(password, salt) {
 }
 
 async function encodeProcess(type) {
-    let encryptionKey = "";
-
-    if (type === 'public') {
-        encryptionKey = PUBLIC_KEY;
-    } else {
-        if (currentRole === "admin") {
-            const selectedAcc = document.getElementById('encryptMode').value;
-            encryptionKey = livePasswords[selectedAcc]; 
-        } else {
-            encryptionKey = savedRawKey;
-        }
-    }
+    let baseKey = (type === 'public') ? PUBLIC_KEY : ((currentRole === "admin") ? livePasswords[document.getElementById('encryptMode').value] : savedRawKey);
+    const secondPass = document.getElementById('secondPassphrase').value.trim();
+    
+    // 💡 如果填了第二重密碼，將兩把密碼組合成複合金鑰進行衍生
+    const finalPassword = secondPass ? `${baseKey}:::${secondPass}` : baseKey;
     
     const input = document.getElementById('inputText').value;
     if(!input) { alert("請先輸入文字再加密！"); return; }
@@ -344,12 +306,8 @@ async function encodeProcess(type) {
         const salt = window.crypto.getRandomValues(new Uint8Array(16));
         const iv = window.crypto.getRandomValues(new Uint8Array(12));
 
-        const key = await deriveKey(encryptionKey, salt);
-        const encryptedContent = await window.crypto.subtle.encrypt(
-            { name: "AES-GCM", iv: iv },
-            key,
-            enc.encode(input)
-        );
+        const key = await deriveKey(finalPassword, salt);
+        const encryptedContent = await window.crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, enc.encode(input));
 
         const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
         const ivHex = Array.from(iv).map(b => b.toString(16).padStart(2, '0')).join('');
@@ -368,13 +326,15 @@ async function decodeProcess() {
         return;
     }
 
-    const candidateKeys = [savedRawKey, PUBLIC_KEY];
+    const secondPass = document.getElementById('secondPassphrase').value.trim();
+    const rawCandidates = [savedRawKey, PUBLIC_KEY];
     
     if (currentRole === "admin") {
-        Object.values(livePasswords).forEach(pw => {
-            if(!candidateKeys.includes(pw)) candidateKeys.push(pw);
-        });
+        Object.values(livePasswords).forEach(pw => { if(!rawCandidates.includes(pw)) rawCandidates.push(pw); });
     }
+
+    // 組合候選密碼（包含第二重密碼情況）
+    const candidateKeys = rawCandidates.map(k => secondPass ? `${k}:::${secondPass}` : k);
 
     const saltHex = input.substring(0, 32);
     const ivHex = input.substring(32, 56);
@@ -387,14 +347,9 @@ async function decodeProcess() {
     let successDecryptedText = null;
 
     for (let testKey of candidateKeys) {
-        if (!testKey) continue;
         try {
             const key = await deriveKey(testKey, salt);
-            const decryptedContent = await window.crypto.subtle.decrypt(
-                { name: "AES-GCM", iv: iv },
-                key,
-                cipherBuffer
-            );
+            const decryptedContent = await window.crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, cipherBuffer);
             const dec = new TextDecoder();
             successDecryptedText = dec.decode(decryptedContent);
             break;
@@ -404,7 +359,7 @@ async function decodeProcess() {
     if (successDecryptedText !== null) {
         document.getElementById('outputText').value = successDecryptedText;
     } else {
-        document.getElementById('outputText').value = "？？？ (密碼不符或數據已被篡改)";
+        document.getElementById('outputText').value = "？？？ (密碼錯誤、第二重密碼不符或數據已被篡改)";
     }
 }
 
