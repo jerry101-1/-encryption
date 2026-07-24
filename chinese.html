@@ -92,7 +92,7 @@
 
         <div class="form-group">
             <label for="inputText">📝 輸入內文字：</label>
-            <textarea id="inputText" placeholder="加密：輸入任意文字...&#10;解密：貼上密文並點擊下方「解密」..."></textarea>
+            <textarea id="inputText" placeholder="加密：輸入任意文字...&#10;解密：貼上密文自動解密..."></textarea>
         </div>
 
         <div class="btn-group">
@@ -101,8 +101,6 @@
         </div>
         
         <button class="btn-decode" onclick="decodeProcess()">🔓 辨識並解密</button>
-
-!!      </const>
 
         <div class="form-group" style="margin-top: 20px;">
             <label for="outputText">✨ 處理結果輸出：</label>
@@ -130,9 +128,6 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// ☁️ 免費公共 JSON 雲端資料庫 API
-const CLOUD_API_URL = "https://api.jsonbin.io/v3/b/660a1234a65463584e03d12a";
-
 const SUPER_ADMIN_KEY = "jerrya1011201@cindya1011202";
 const PUBLIC_PREFIX = "pub000";
 const PUBLIC_KEY = "COMMON_MEMBER_SHARED_SECRET_2026";
@@ -142,17 +137,42 @@ const PREFIX_LENGTH = 6;
 let livePasswords = {
     "x9R2fK": "userpass1", // 成員一 (小魚)
     "m4P7wQ": "Kris@Lucy",  // 成員二 (Kris)
-    "b2V9zX": "userpass3",
+    "b2V9zX": "userpass3",  // 成員三 (林沐恩)
     "t5N1sJ": "userpass4",
     "k8C3hY": "userpass5",
     "v6G2mD": "userpass6",
-    "a7F5eR": "userpass7",
+    "a7F5eR": "userpass7",  // 成員七 (吳彥普)
     "p3K8qZ": "userpass8"
 };
 
 let currentRole = "user"; 
 let loggedInPrefix = ""; 
 let savedRawKey = "";    
+
+// ⚡ 綁定自動偵測解密
+const inputArea = document.getElementById('inputText');
+
+inputArea.addEventListener('paste', () => {
+    setTimeout(() => {
+        autoDetectAndDecode();
+    }, 50);
+});
+
+inputArea.addEventListener('input', () => {
+    autoDetectAndDecode();
+});
+
+function autoDetectAndDecode() {
+    const val = inputArea.value.trim();
+    if (val.length >= PREFIX_LENGTH) {
+        const header = val.substring(0, PREFIX_LENGTH);
+        const knownPrefixes = Object.keys(livePasswords);
+        
+        if (header === PUBLIC_PREFIX || knownPrefixes.includes(header)) {
+            decodeProcess();
+        }
+    }
+}
 
 // 📡 開啟網頁時自動從雲端拉取最新的密碼表
 async function fetchCloudPasswords() {
@@ -194,7 +214,7 @@ function verifyPassword() {
 function showAllPasswords() {
     if (currentRole !== "admin") return;
     let msg = "📋 【全體成員最新密碼與神祕前綴對照表】\n\n";
-    const names = ["成員一 (小魚)", "成員二 (Kris)", "成員三", "成員四", "成員五", "成員六", "成員七", "成員八"];
+    const names = ["成員一 (小魚)", "成員二 (Kris)", "成員三 (林沐恩)", "成員四", "成員五", "成員六", "成員七 (吳彥普)", "成員八"];
     Object.keys(livePasswords).forEach((prefix, i) => {
         msg += `${names[i]} ➡️ 前綴: ${prefix} | 密碼: ${livePasswords[prefix]}\n`;
     });
