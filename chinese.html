@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/argon2-browser/1.18.0/argon2-bundled.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>首頁</title>
@@ -58,12 +57,31 @@
         .btn-admin-view:hover { background-color: #c0392b; }
         .btn-change-pw { background-color: #34495e; margin-top: 5px; width: 100%; }
         .btn-change-pw:hover { background-color: #2c3e50; }
+        .btn-changelog { background-color: #7f8c8d; width: 100%; margin-top: 15px; font-size: 13px; padding: 8px; }
+        .btn-changelog:hover { background-color: #95a5a6; }
+        
+        /* 更新日誌區塊樣式 */
+        .changelog-box {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 10px;
+            font-size: 13px;
+            line-height: 1.6;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .changelog-item { margin-bottom: 12px; }
+        .changelog-version { font-weight: bold; color: #2c3e50; }
+        .changelog-date { color: #7f8c8d; font-size: 12px; }
+        
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <h2>📝 筆記本</h2>
+    <h2>📝 筆記本 (AES-256 軍規版)</h2>
     <div id="syncStatus" class="status-tag">📡 連線雲端資料庫中...</div>
 
     <div id="authBlock" class="form-group">
@@ -115,6 +133,34 @@
             <input type="password" id="newPasswordInput" placeholder="請輸入想要變更的新密碼...">
             <button class="btn-change-pw" onclick="changeCurrentPassword()">💾 確認修改</button>
         </div>
+
+        <button class="btn-changelog" onclick="toggleChangelog()">📜 檢視系統更新日誌 (Changelog)</button>
+        <div id="changelogBox" class="changelog-box hidden">
+            <div class="changelog-item">
+                <span class="changelog-version">v3.0.0</span> <span class="changelog-date">(2026/07)</span>
+                <ul>
+                    <li>🔐 全面升級至 <b>AES-256-GCM</b> 軍規加密標準。</li>
+                    <li>🛡️ 導入 <b>PBKDF2 (100,000次迭代)</b> 與硬體級隨機 Salt/IV。</li>
+                    <li>✨ 移除顯性前綴，提升密文隱蔽性與安全性。</li>
+                    <li>🔍 新增 GCM 數位簽章防篡改自動校驗。</li>
+                </ul>
+            </div>
+            <div class="changelog-item">
+                <span class="changelog-version">v2.1.0</span>
+                <ul>
+                    <li>⚡ 支援貼上（Paste）與打字（Input）自動即時辨識解密。</li>
+                    <li>📋 管理員排版對齊優化。</li>
+                </ul>
+            </div>
+            <div class="changelog-item">
+                <span class="changelog-version">v1.0.0</span>
+                <ul>
+                    <li>🚀 筆記本加解密基礎系統上線。</li>
+                    <li>☁️ 支援個人專屬通道與雲端密碼同步。</li>
+                </ul>
+            </div>
+        </div>
+
     </div>
 
 <script>
@@ -132,7 +178,6 @@ document.addEventListener('keydown', function(e) {
 const SUPER_ADMIN_KEY = "jerrya1011201@cindya1011202";
 const PUBLIC_KEY = "COMMON_MEMBER_SHARED_SECRET_2026";
 
-// 預設成員密碼表
 let livePasswords = {
     "user1": "userpass1", // 成員一 (小魚)
     "user2": "Kris@Lucy",  // 成員二 (Kris)
@@ -148,6 +193,12 @@ let currentRole = "user";
 let currentUserAccount = ""; 
 let savedRawKey = "";    
 
+// 切換更新日誌顯示/隱藏
+function toggleChangelog() {
+    const box = document.getElementById('changelogBox');
+    box.classList.toggle('hidden');
+}
+
 // ⚡ 貼上自動解密監聽
 const inputArea = document.getElementById('inputText');
 
@@ -161,7 +212,6 @@ inputArea.addEventListener('input', () => {
 
 function autoDetectAndDecode() {
     const val = inputArea.value.trim();
-    // 無前綴版本：只要長度達標（Salt 32 + IV 24 = 56位 Hex）就嘗試自動解密
     if (val.length >= 56 && /^[0-9a-fA-F]+$/.test(val)) {
         decodeProcess();
     }
@@ -171,7 +221,7 @@ async function fetchCloudPasswords() {
     try {
         const localBackup = localStorage.getItem('SYNC_MEMBER_KEYS');
         if(localBackup) livePasswords = JSON.parse(localBackup);
-        document.getElementById('syncStatus').innerText = "🟢 系統連線正常 (AES-256 無前綴模式)";
+        document.getElementById('syncStatus').innerText = "🟢 系統連線正常 (AES-256)";
     } catch (e) {
         document.getElementById('syncStatus').innerText = "🟡 系統就緒";
     }
@@ -235,30 +285,29 @@ function changeCurrentPassword() {
 // 🔐 Web Crypto API (AES-256-GCM + PBKDF2) 模組
 // -------------------------------------------------------------
 
-// ⚡ 使用 Argon2id 衍生 256-bit AES 金鑰
-async function deriveKeyArgon2(password, salt) {
-    // 1. 設定 Argon2 參數 (高記憶體開銷，極難被 GPU 破解)
-    const result = await argon2.hash({
-        pass: password,
-        salt: salt,
-        time: 3,           // 迭代次數
-        mem: 65536,        // 佔用 64 MB 記憶體
-        hashLen: 32,       // 輸出 32 bytes (256 bits)
-        parallelism: 1,
-        type: argon2.Argon2id // 使用安全性最高的 Argon2id 模式
-    });
-
-    // 2. 將產生的 Hash 轉為 Web Crypto 可用的 AES-GCM 金鑰
-    return window.crypto.subtle.importKey(
+async function deriveKey(password, salt) {
+    const enc = new TextEncoder();
+    const baseKey = await window.crypto.subtle.importKey(
         "raw",
-        result.hash,
+        enc.encode(password),
+        "PBKDF2",
+        false,
+        ["deriveKey"]
+    );
+    return window.crypto.subtle.deriveKey(
+        {
+            name: "PBKDF2",
+            salt: salt,
+            iterations: 100000,
+            hash: "SHA-256"
+        },
+        baseKey,
         { name: "AES-GCM", length: 256 },
         false,
         ["encrypt", "decrypt"]
     );
 }
 
-// 加密 (無前綴：輸出 Salt + IV + Ciphertext)
 async function encodeProcess(type) {
     let encryptionKey = "";
 
@@ -292,14 +341,12 @@ async function encodeProcess(type) {
         const ivHex = Array.from(iv).map(b => b.toString(16).padStart(2, '0')).join('');
         const cipherHex = Array.from(new Uint8Array(encryptedContent)).map(b => b.toString(16).padStart(2, '0')).join('');
 
-        // 直接串接，不包含任何 Prefix 前綴
         document.getElementById('outputText').value = saltHex + ivHex + cipherHex;
     } catch(e) {
         alert("⚠️ 加密過程發生錯誤！");
     }
 }
 
-// 解密 (會先嘗試使用當前個人密碼解密，失敗則嘗試用全員互通公鑰解密)
 async function decodeProcess() {
     const input = document.getElementById('inputText').value.trim();
     if (input.length < 56 || !/^[0-9a-fA-F]+$/.test(input)) {
@@ -307,10 +354,8 @@ async function decodeProcess() {
         return;
     }
 
-    // 嘗試候選密碼列表 (先嘗試個人/當前登入密碼，再嘗試公鑰)
     const candidateKeys = [savedRawKey, PUBLIC_KEY];
     
-    // 如果是管理員，把全部成員的密碼也都納入嘗試解密列表
     if (currentRole === "admin") {
         Object.values(livePasswords).forEach(pw => {
             if(!candidateKeys.includes(pw)) candidateKeys.push(pw);
@@ -327,7 +372,6 @@ async function decodeProcess() {
 
     let successDecryptedText = null;
 
-    // 輪流試驗金鑰，只要有一個成功解開就輸出
     for (let testKey of candidateKeys) {
         if (!testKey) continue;
         try {
@@ -339,10 +383,8 @@ async function decodeProcess() {
             );
             const dec = new TextDecoder();
             successDecryptedText = dec.decode(decryptedContent);
-            break; // 解密成功，跳出迴圈
-        } catch (e) {
-            // 密碼不對繼續嘗試下一個
-        }
+            break;
+        } catch (e) {}
     }
 
     if (successDecryptedText !== null) {
