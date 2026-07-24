@@ -81,7 +81,7 @@
 </head>
 <body>
 
-    <h2>📝 筆記本 (AES-256 軍規版)</h2>
+    <h2>📝 筆記本</h2>
     <div id="syncStatus" class="status-tag">📡 連線雲端資料庫中...</div>
 
     <div id="authBlock" class="form-group">
@@ -141,7 +141,7 @@
                 <ul>
                     <li>🔐 全面升級至 <b>AES-256-GCM</b> 軍規加密標準。</li>
                     <li>🛡️ 導入 <b>PBKDF2 (100,000次迭代)</b> 與硬體級隨機 Salt/IV。</li>
-                    <li>✨ 移除顯性前綴，提升密文隱蔽性與安全性。</li>
+                    <li>✨ 移除前綴，提升密文隱蔽性與安全性。</li>
                     <li>🔍 新增 GCM 數位簽章防篡改自動校驗。</li>
                 </ul>
             </div>
@@ -221,7 +221,7 @@ async function fetchCloudPasswords() {
     try {
         const localBackup = localStorage.getItem('SYNC_MEMBER_KEYS');
         if(localBackup) livePasswords = JSON.parse(localBackup);
-        document.getElementById('syncStatus').innerText = "🟢 系統連線正常 (AES-256)";
+        document.getElementById('syncStatus').innerText = "🟢 連線正常";
     } catch (e) {
         document.getElementById('syncStatus').innerText = "🟡 系統就緒";
     }
