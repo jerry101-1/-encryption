@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/argon2-browser/1.18.0/argon2-bundled.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>首頁</title>
@@ -234,23 +235,23 @@ function changeCurrentPassword() {
 // 🔐 Web Crypto API (AES-256-GCM + PBKDF2) 模組
 // -------------------------------------------------------------
 
-async function deriveKey(password, salt) {
-    const enc = new TextEncoder();
-    const baseKey = await window.crypto.subtle.importKey(
+// ⚡ 使用 Argon2id 衍生 256-bit AES 金鑰
+async function deriveKeyArgon2(password, salt) {
+    // 1. 設定 Argon2 參數 (高記憶體開銷，極難被 GPU 破解)
+    const result = await argon2.hash({
+        pass: password,
+        salt: salt,
+        time: 3,           // 迭代次數
+        mem: 65536,        // 佔用 64 MB 記憶體
+        hashLen: 32,       // 輸出 32 bytes (256 bits)
+        parallelism: 1,
+        type: argon2.Argon2id // 使用安全性最高的 Argon2id 模式
+    });
+
+    // 2. 將產生的 Hash 轉為 Web Crypto 可用的 AES-GCM 金鑰
+    return window.crypto.subtle.importKey(
         "raw",
-        enc.encode(password),
-        "PBKDF2",
-        false,
-        ["deriveKey"]
-    );
-    return window.crypto.subtle.deriveKey(
-        {
-            name: "PBKDF2",
-            salt: salt,
-            iterations: 100000,
-            hash: "SHA-256"
-        },
-        baseKey,
+        result.hash,
         { name: "AES-GCM", length: 256 },
         false,
         ["encrypt", "decrypt"]
