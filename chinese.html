@@ -62,7 +62,7 @@
 </head>
 <body>
 
-    <h2>📝 筆記本</h2>
+    <h2>📝 筆記本 (AES-256 無前綴版)</h2>
     <div id="syncStatus" class="status-tag">📡 連線雲端資料庫中...</div>
 
     <div id="authBlock" class="form-group">
@@ -73,34 +73,34 @@
 
     <div id="mainBlock" class="hidden">
         
-        <button id="adminViewBtn" class="btn-admin-view hidden" onclick="showAllPasswords()">查看全體成員</button>
+        <button id="adminViewBtn" class="btn-admin-view hidden" onclick="showAllPasswords()">👁️ 查看全體成員最新密碼表</button>
         
         <div id="adminMenuBlock" class="form-group hidden">
-            <label for="encryptMode">⚙️ 管理員控制面板：切換個人加密對象</label>
+            <label for="encryptMode">⚙️ 管理員控制面板：選擇成員帳號</label>
             <select id="encryptMode">
-                <option value="x9R2fK" selected>成員一 (小魚)</option>
-                <option value="m4P7wQ">成員二 (Kris)</option>
-                <option value="b2V9zX">成員三 (林沐恩)</option>
-                <option value="t5N1sJ">成員四</option>
-                <option value="k8C3hY">成員五</option>
-                <option value="v6G2mD">成員六</option>
-                <option value="a7F5eR">成員七 (吳彥普)</option>
-                <option value="p3K8qZ">成員八</option>
+                <option value="user1" selected>成員一 (小魚)</option>
+                <option value="user2">成員二 (Kris)</option>
+                <option value="user3">成員三 (林沐恩)</option>
+                <option value="user4">成員四</option>
+                <option value="user5">成員五</option>
+                <option value="user6">成員六</option>
+                <option value="user7">成員七 (吳彥普)</option>
+                <option value="user8">成員八</option>
             </select>
             <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
         </div>
 
         <div class="form-group">
-            <label for="inputText">📝 輸入內文：</label>
+            <label for="inputText">📝 輸入內文字：</label>
             <textarea id="inputText" placeholder="加密：輸入任意文字...&#10;解密：貼上密文自動解密..."></textarea>
         </div>
 
         <div class="btn-group">
-            <button class="btn-encode-public" onclick="encodeProcess('public')">🌐 全員互通</button>
-            <button class="btn-encode-private" onclick="encodeProcess('private')">🔒 加密</button>
+            <button class="btn-encode-public" onclick="encodeProcess('public')">🌐 全員互通加密</button>
+            <button class="btn-encode-private" onclick="encodeProcess('private')">🔒 個人加密</button>
         </div>
         
-        <button class="btn-decode" onclick="decodeProcess()">🔓 辨識並解密</button>
+        <button class="btn-decode" onclick="decodeProcess()">🔓 手動解密</button>
 
         <div class="form-group" style="margin-top: 20px;">
             <label for="outputText">✨ 處理結果輸出：</label>
@@ -129,27 +129,25 @@ document.addEventListener('keydown', function(e) {
 });
 
 const SUPER_ADMIN_KEY = "jerrya1011201@cindya1011202";
-const PUBLIC_PREFIX = "pub000";
 const PUBLIC_KEY = "COMMON_MEMBER_SHARED_SECRET_2026";
-const PREFIX_LENGTH = 6;
 
-// 預設密碼表
+// 預設成員密碼表
 let livePasswords = {
-    "x9R2fK": "userpass1", // 成員一 (小魚)
-    "m4P7wQ": "Kris@Lucy",  // 成員二 (Kris)
-    "b2V9zX": "userpass3",  // 成員三 (林沐恩)
-    "t5N1sJ": "userpass4",
-    "k8C3hY": "userpass5",
-    "v6G2mD": "userpass6",
-    "a7F5eR": "userpass7",  // 成員七 (吳彥普)
-    "p3K8qZ": "userpass8"
+    "user1": "userpass1", // 成員一 (小魚)
+    "user2": "Kris@Lucy",  // 成員二 (Kris)
+    "user3": "userpass3",  // 成員三 (林沐恩)
+    "user4": "userpass4",
+    "user5": "userpass5",
+    "user6": "userpass6",
+    "user7": "userpass7",  // 成員七 (吳彥普)
+    "user8": "userpass8"
 };
 
 let currentRole = "user"; 
-let loggedInPrefix = ""; 
+let currentUserAccount = ""; 
 let savedRawKey = "";    
 
-// ⚡ 綁定自動偵測解密
+// ⚡ 貼上自動解密監聽
 const inputArea = document.getElementById('inputText');
 
 inputArea.addEventListener('paste', () => {
@@ -162,22 +160,17 @@ inputArea.addEventListener('input', () => {
 
 function autoDetectAndDecode() {
     const val = inputArea.value.trim();
-    if (val.length >= PREFIX_LENGTH) {
-        const header = val.substring(0, PREFIX_LENGTH);
-        const knownPrefixes = Object.keys(livePasswords);
-        
-        if (header === PUBLIC_PREFIX || knownPrefixes.includes(header)) {
-            decodeProcess();
-        }
+    // 無前綴版本：只要長度達標（Salt 32 + IV 24 = 56位 Hex）就嘗試自動解密
+    if (val.length >= 56 && /^[0-9a-fA-F]+$/.test(val)) {
+        decodeProcess();
     }
 }
 
-// 📡 開啟網頁時自動讀取本地/雲端資料
 async function fetchCloudPasswords() {
     try {
         const localBackup = localStorage.getItem('SYNC_MEMBER_KEYS');
         if(localBackup) livePasswords = JSON.parse(localBackup);
-        document.getElementById('syncStatus').innerText = "🟢 連線正常";
+        document.getElementById('syncStatus').innerText = "🟢 系統連線正常 (AES-256 無前綴模式)";
     } catch (e) {
         document.getElementById('syncStatus').innerText = "🟡 系統就緒";
     }
@@ -196,10 +189,10 @@ function verifyPassword() {
         document.getElementById('adminMenuBlock').classList.remove('hidden'); 
         document.getElementById('adminViewBtn').classList.remove('hidden'); 
     } else {
-        const matchedPrefix = Object.keys(livePasswords).find(prefix => livePasswords[prefix] === inputKey);
-        if (matchedPrefix) {
+        const matchedAccount = Object.keys(livePasswords).find(acc => livePasswords[acc] === inputKey);
+        if (matchedAccount) {
             currentRole = "user";
-            loggedInPrefix = matchedPrefix; 
+            currentUserAccount = matchedAccount; 
             document.getElementById('authBlock').classList.add('hidden'); 
             document.getElementById('mainBlock').classList.remove('hidden'); 
         } else {
@@ -212,43 +205,37 @@ function showAllPasswords() {
     if (currentRole !== "admin") return;
     
     let msg = "📋【全體成員最新密碼對照表】\n\n";
-    
     const names = [
         "成員一 (小魚)", "成員二 (Kris)", "成員三 (林沐恩)", "成員四 (未設定)",
         "成員五 (未設定)", "成員六 (未設定)", "成員七 (吳彥普)", "成員八 (未設定)"
     ];
     
-    const prefixes = Object.keys(livePasswords);
-    
-    prefixes.forEach((prefix, i) => {
-        msg += `${i + 1}. ${names[i]}\n   └─ 前綴：${prefix} ｜ 密碼：${livePasswords[prefix]}\n\n`;
+    Object.keys(livePasswords).forEach((accKey, i) => {
+        msg += `${i + 1}. ${names[i]}\n   └─ 當前密碼：${livePasswords[accKey]}\n\n`;
     });
 
     alert(msg);
 }
-    
+
 function changeCurrentPassword() {
     const newPassword = document.getElementById('newPasswordInput').value.trim();
     if (!newPassword) { alert("請輸入有效的新密碼！"); return; }
-    let targetPrefix = (currentRole === "admin") ? document.getElementById('encryptMode').value : loggedInPrefix;
+    let targetAcc = (currentRole === "admin") ? document.getElementById('encryptMode').value : currentUserAccount;
     
-    livePasswords[targetPrefix] = newPassword;
+    livePasswords[targetAcc] = newPassword;
     localStorage.setItem('SYNC_MEMBER_KEYS', JSON.stringify(livePasswords));
     
-    alert(`💾 修改成功！個人通道密碼已重設為：${newPassword}`);
+    alert(`💾 修改成功！密碼已重設為：${newPassword}`);
     document.getElementById('newPasswordInput').value = "";
     if (currentRole !== "admin") savedRawKey = newPassword;
 }
 
 // -------------------------------------------------------------
-// 🔐 Web Crypto API (AES-256-GCM + PBKDF2) 軍規核心模組
+// 🔐 Web Crypto API (AES-256-GCM + PBKDF2) 模組
 // -------------------------------------------------------------
 
-// 將明文密碼透過 PBKDF2 轉化為 256 位元的金鑰 (Key)
 async function deriveKey(password, salt) {
     const enc = new TextEncoder();
-    const keyMaterial = await crypto.subcrypto ? crypto.subcrypto.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]) 
-                                              : window.crypto.subcrypto; // compatibility
     const baseKey = await window.crypto.subtle.importKey(
         "raw",
         enc.encode(password),
@@ -260,7 +247,7 @@ async function deriveKey(password, salt) {
         {
             name: "PBKDF2",
             salt: salt,
-            iterations: 100000, // 強化防爆破
+            iterations: 100000,
             hash: "SHA-256"
         },
         baseKey,
@@ -270,20 +257,17 @@ async function deriveKey(password, salt) {
     );
 }
 
-// 核心加密函式
+// 加密 (無前綴：輸出 Salt + IV + Ciphertext)
 async function encodeProcess(type) {
-    let mode = ""; 
     let encryptionKey = "";
 
     if (type === 'public') {
-        mode = PUBLIC_PREFIX;
         encryptionKey = PUBLIC_KEY;
     } else {
         if (currentRole === "admin") {
-            mode = document.getElementById('encryptMode').value;
-            encryptionKey = livePasswords[mode]; 
+            const selectedAcc = document.getElementById('encryptMode').value;
+            encryptionKey = livePasswords[selectedAcc]; 
         } else {
-            mode = loggedInPrefix;
             encryptionKey = savedRawKey;
         }
     }
@@ -293,11 +277,9 @@ async function encodeProcess(type) {
 
     try {
         const enc = new TextEncoder();
-        // 1. 產生硬體級隨機 Salt (16 bytes) 與 IV (12 bytes)
         const salt = window.crypto.getRandomValues(new Uint8Array(16));
         const iv = window.crypto.getRandomValues(new Uint8Array(12));
 
-        // 2. 衍生金鑰並加密
         const key = await deriveKey(encryptionKey, salt);
         const encryptedContent = await window.crypto.subtle.encrypt(
             { name: "AES-GCM", iv: iv },
@@ -305,65 +287,67 @@ async function encodeProcess(type) {
             enc.encode(input)
         );
 
-        // 3. 打包資料：前綴(6字元) + Salt(32Hex) + IV(24Hex) + 密文(Hex)
         const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
         const ivHex = Array.from(iv).map(b => b.toString(16).padStart(2, '0')).join('');
         const cipherHex = Array.from(new Uint8Array(encryptedContent)).map(b => b.toString(16).padStart(2, '0')).join('');
 
-        document.getElementById('outputText').value = mode + saltHex + ivHex + cipherHex;
+        // 直接串接，不包含任何 Prefix 前綴
+        document.getElementById('outputText').value = saltHex + ivHex + cipherHex;
     } catch(e) {
         alert("⚠️ 加密過程發生錯誤！");
     }
 }
 
-// 核心解密函式
+// 解密 (會先嘗試使用當前個人密碼解密，失敗則嘗試用全員互通公鑰解密)
 async function decodeProcess() {
     const input = document.getElementById('inputText').value.trim();
-    if (input.length < PREFIX_LENGTH + 32 + 24) { // 前綴(6) + Salt(32) + IV(24) = 至少62位
+    if (input.length < 56 || !/^[0-9a-fA-F]+$/.test(input)) {
         document.getElementById('outputText').value = "？？？";
         return;
     }
+
+    // 嘗試候選密碼列表 (先嘗試個人/當前登入密碼，再嘗試公鑰)
+    const candidateKeys = [savedRawKey, PUBLIC_KEY];
     
-    const detectedHeader = input.substring(0, PREFIX_LENGTH);
-    let targetPassword = "";
-    
-    if (detectedHeader === PUBLIC_PREFIX) {
-        targetPassword = PUBLIC_KEY;
-    } else {
-        const rawPass = livePasswords[detectedHeader];
-        if (rawPass && (currentRole === "admin" || savedRawKey === rawPass)) {
-            targetPassword = rawPass;
+    // 如果是管理員，把全部成員的密碼也都納入嘗試解密列表
+    if (currentRole === "admin") {
+        Object.values(livePasswords).forEach(pw => {
+            if(!candidateKeys.includes(pw)) candidateKeys.push(pw);
+        });
+    }
+
+    const saltHex = input.substring(0, 32);
+    const ivHex = input.substring(32, 56);
+    const cipherHex = input.substring(56);
+
+    const salt = new Uint8Array(saltHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+    const iv = new Uint8Array(ivHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+    const cipherBuffer = new Uint8Array(cipherHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+
+    let successDecryptedText = null;
+
+    // 輪流試驗金鑰，只要有一個成功解開就輸出
+    for (let testKey of candidateKeys) {
+        if (!testKey) continue;
+        try {
+            const key = await deriveKey(testKey, salt);
+            const decryptedContent = await window.crypto.subtle.decrypt(
+                { name: "AES-GCM", iv: iv },
+                key,
+                cipherBuffer
+            );
+            const dec = new TextDecoder();
+            successDecryptedText = dec.decode(decryptedContent);
+            break; // 解密成功，跳出迴圈
+        } catch (e) {
+            // 密碼不對繼續嘗試下一個
         }
     }
-    
-    if (!targetPassword) {
-        document.getElementById('outputText').value = "？？？ (無權限或密碼不符)";
-        return;
-    }
 
-    try {
-        // 拆解數據包
-        const saltHex = input.substring(6, 38);
-        const ivHex = input.substring(38, 62);
-        const cipherHex = input.substring(62);
-
-        const salt = new Uint8Array(saltHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-        const iv = new Uint8Array(ivHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-        const cipherBuffer = new Uint8Array(cipherHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-
-        // 衍生金鑰並解密
-        const key = await deriveKey(targetPassword, salt);
-        const decryptedContent = await window.crypto.subtle.decrypt(
-            { name: "AES-GCM", iv: iv },
-            key,
-            cipherBuffer
-        );
-
-        const dec = new TextDecoder();
-        document.getElementById('outputText').value = dec.decode(decryptedContent);
-    } catch (e) {
-        // AES-GCM 內建防篡改驗證，若被偷改或密碼錯會直接進 catch
-        document.getElementById('outputText').value = "？？？ (密碼錯誤或數據已被篡改)";
+    if (successDecryptedText !== null) {
+        document.getElementById('outputText').value = successDecryptedText;
+    } else {
+        document.getElementById('outputText').value = "？？？ (密碼不符或數據已被篡改)";
     }
 }
 
