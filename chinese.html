@@ -62,7 +62,7 @@
 </head>
 <body>
 
-    <h2>📝筆記本</h2>
+    <h2>📝 筆記本</h2>
     <div id="syncStatus" class="status-tag">📡 連線雲端資料庫中...</div>
 
     <div id="authBlock" class="form-group">
@@ -73,7 +73,7 @@
 
     <div id="mainBlock" class="hidden">
         
-        <button id="adminViewBtn" class="btn-admin-view hidden" onclick="showAllPasswords()">👁️ 查看全體成員最新密碼與神祕前綴</button>
+        <button id="adminViewBtn" class="btn-admin-view hidden" onclick="showAllPasswords()">查看全體成員</button>
         
         <div id="adminMenuBlock" class="form-group hidden">
             <label for="encryptMode">⚙️ 管理員控制面板：切換個人加密對象</label>
@@ -91,7 +91,7 @@
         </div>
 
         <div class="form-group">
-            <label for="inputText">📝 輸入內文字：</label>
+            <label for="inputText">📝 輸入內文：</label>
             <textarea id="inputText" placeholder="加密：輸入任意文字...&#10;解密：貼上密文自動解密..."></textarea>
         </div>
 
@@ -153,9 +153,7 @@ let savedRawKey = "";
 const inputArea = document.getElementById('inputText');
 
 inputArea.addEventListener('paste', () => {
-    setTimeout(() => {
-        autoDetectAndDecode();
-    }, 50);
+    setTimeout(() => { autoDetectAndDecode(); }, 50);
 });
 
 inputArea.addEventListener('input', () => {
@@ -174,15 +172,14 @@ function autoDetectAndDecode() {
     }
 }
 
-// 📡 開啟網頁時自動從雲端拉取最新的密碼表
+// 📡 開啟網頁時自動讀取本地/雲端資料
 async function fetchCloudPasswords() {
     try {
         const localBackup = localStorage.getItem('SYNC_MEMBER_KEYS');
         if(localBackup) livePasswords = JSON.parse(localBackup);
-        
-        document.getElementById('syncStatus').innerText = "🟢 雲端連線成功 (密碼表已同步)";
+        document.getElementById('syncStatus').innerText = "🟢 系統連線正常 (AES-256 就緒)";
     } catch (e) {
-        document.getElementById('syncStatus').innerText = "🟡 使用本地備份密碼庫";
+        document.getElementById('syncStatus').innerText = "🟡 系統就緒";
     }
 }
 fetchCloudPasswords();
@@ -221,7 +218,6 @@ function showAllPasswords() {
     alert(msg);
 }
 
-// ☁️ 修改密碼並更新
 function changeCurrentPassword() {
     const newPassword = document.getElementById('newPasswordInput').value.trim();
     if (!newPassword) { alert("請輸入有效的新密碼！"); return; }
@@ -235,29 +231,38 @@ function changeCurrentPassword() {
     if (currentRole !== "admin") savedRawKey = newPassword;
 }
 
-function cyrb128(str) {
-    let h1 = 1779033703, h2 = 3024734765, h3 = 3362453663, h4 = 502494325;
-    for (let i = 0, k; i < str.length; i++) {
-        k = str.charCodeAt(i);
-        h1 = h2 ^ Math.imul(h1 ^ k, 597399067);
-        h2 = h3 ^ Math.imul(h2 ^ k, 2869860233);
-        h3 = h4 ^ Math.imul(h3 ^ k, 2869860233);
-        h4 = h1 ^ Math.imul(h4 ^ k, 2716044179);
-    }
-    return [(h1^h2)>>>0, h2>>>0, h3>>>0, h4>>>0];
-}
-function sfc32(a, b, c, d) {
-    return function() {
-        a >>>= 0; b >>>= 0; c >>>= 0; d >>>= 0;
-        var t = (a + b) | 0;
-        a = b ^ (b >>> 9); b = (c + (c << 3)) | 0;
-        c = (c << 21) | (c >>> 11); d = (d + 1) | 0;
-        t = (t + d) | 0; c = (c + t) | 0;
-        return (t >>> 0) / 4294967296;
-    }
+// -------------------------------------------------------------
+// 🔐 Web Crypto API (AES-256-GCM + PBKDF2) 軍規核心模組
+// -------------------------------------------------------------
+
+// 將明文密碼透過 PBKDF2 轉化為 256 位元的金鑰 (Key)
+async function deriveKey(password, salt) {
+    const enc = new TextEncoder();
+    const keyMaterial = await crypto.subcrypto ? crypto.subcrypto.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]) 
+                                              : window.crypto.subcrypto; // compatibility
+    const baseKey = await window.crypto.subtle.importKey(
+        "raw",
+        enc.encode(password),
+        "PBKDF2",
+        false,
+        ["deriveKey"]
+    );
+    return window.crypto.subtle.deriveKey(
+        {
+            name: "PBKDF2",
+            salt: salt,
+            iterations: 100000, // 強化防爆破
+            hash: "SHA-256"
+        },
+        baseKey,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["encrypt", "decrypt"]
+    );
 }
 
-function encodeProcess(type) {
+// 核心加密函式
+async function encodeProcess(type) {
     let mode = ""; 
     let encryptionKey = "";
 
@@ -276,23 +281,36 @@ function encodeProcess(type) {
     
     const input = document.getElementById('inputText').value;
     if(!input) { alert("請先輸入文字再加密！"); return; }
-    
-    let seed = cyrb128(encryptionKey);
-    let rand = sfc32(seed[0], seed[1], seed[2], seed[3]);
-    
-    let result = mode; 
-    for (let i = 0; i < input.length; i++) {
-        let code = input.charCodeAt(i);
-        let randomShift = Math.floor(rand() * 65536);
-        let cipherCode = (code + randomShift) % 65536;
-        result += cipherCode.toString(16).padStart(4, '0');
+
+    try {
+        const enc = new TextEncoder();
+        // 1. 產生硬體級隨機 Salt (16 bytes) 與 IV (12 bytes)
+        const salt = window.crypto.getRandomValues(new Uint8Array(16));
+        const iv = window.crypto.getRandomValues(new Uint8Array(12));
+
+        // 2. 衍生金鑰並加密
+        const key = await deriveKey(encryptionKey, salt);
+        const encryptedContent = await window.crypto.subtle.encrypt(
+            { name: "AES-GCM", iv: iv },
+            key,
+            enc.encode(input)
+        );
+
+        // 3. 打包資料：前綴(6字元) + Salt(32Hex) + IV(24Hex) + 密文(Hex)
+        const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
+        const ivHex = Array.from(iv).map(b => b.toString(16).padStart(2, '0')).join('');
+        const cipherHex = Array.from(new Uint8Array(encryptedContent)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+        document.getElementById('outputText').value = mode + saltHex + ivHex + cipherHex;
+    } catch(e) {
+        alert("⚠️ 加密過程發生錯誤！");
     }
-    document.getElementById('outputText').value = result;
 }
 
-function decodeProcess() {
+// 核心解密函式
+async function decodeProcess() {
     const input = document.getElementById('inputText').value.trim();
-    if (input.length < PREFIX_LENGTH) {
+    if (input.length < PREFIX_LENGTH + 32 + 24) { // 前綴(6) + Salt(32) + IV(24) = 至少62位
         document.getElementById('outputText').value = "？？？";
         return;
     }
@@ -310,28 +328,34 @@ function decodeProcess() {
     }
     
     if (!targetPassword) {
-        let questionMarkResult = "";
-        let charCount = Math.floor((input.length - PREFIX_LENGTH) / 4);
-        for (let i = 0; i < charCount; i++) questionMarkResult += "？";
-        document.getElementById('outputText').value = questionMarkResult || "？？？";
+        document.getElementById('outputText').value = "？？？ (無權限或密碼不符)";
         return;
     }
-    
-    let bodyText = input.substring(PREFIX_LENGTH).replace(/[^0-9a-fA-F]/g, "");
-    let seed = cyrb128(targetPassword);
-    let rand = sfc32(seed[0], seed[1], seed[2], seed[3]);
-    let result = "";
-    
-    for (let i = 0; i < bodyText.length; i += 4) {
-        let hexToken = bodyText.substring(i, i + 4);
-        if (hexToken.length === 4) {
-            let cipherCode = parseInt(hexToken, 16);
-            let randomShift = Math.floor(rand() * 65536);
-            let rawCode = (cipherCode - randomShift + 65536) % 65536;
-            result += String.fromCharCode(rawCode);
-        }
+
+    try {
+        // 拆解數據包
+        const saltHex = input.substring(6, 38);
+        const ivHex = input.substring(38, 62);
+        const cipherHex = input.substring(62);
+
+        const salt = new Uint8Array(saltHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+        const iv = new Uint8Array(ivHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+        const cipherBuffer = new Uint8Array(cipherHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+
+        // 衍生金鑰並解密
+        const key = await deriveKey(targetPassword, salt);
+        const decryptedContent = await window.crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: iv },
+            key,
+            cipherBuffer
+        );
+
+        const dec = new TextDecoder();
+        document.getElementById('outputText').value = dec.decode(decryptedContent);
+    } catch (e) {
+        // AES-GCM 內建防篡改驗證，若被偷改或密碼錯會直接進 catch
+        document.getElementById('outputText').value = "？？？ (密碼錯誤或數據已被篡改)";
     }
-    document.getElementById('outputText').value = result;
 }
 
 function copyResult() {
