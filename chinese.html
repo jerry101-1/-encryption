@@ -210,14 +210,25 @@ function verifyPassword() {
 
 function showAllPasswords() {
     if (currentRole !== "admin") return;
-    let msg = "📋 【全體成員最新密碼與神祕前綴對照表】\n\n";
-    const names = ["成員一 (小魚)", "成員二 (Kris)", "成員三 (林沐恩)", "成員四", "成員五", "成員六", "成員七 (吳彥普)", "成員八"];
-    Object.keys(livePasswords).forEach((prefix, i) => {
-        msg += `${names[i]} ➡️ 前綴: ${prefix} | 密碼: ${livePasswords[prefix]}\n`;
+    
+    let msg = "📋 【全體成員最新密碼與對照表】\n";
+    msg += "----------------------------------------\n";
+    
+    const names = [
+        "成員一 (小魚)", "成員二 (Kris)", "成員三 (林沐恩)", "成員四 (未設定)",
+        "成員五 (未設定)", "成員六 (未設定)", "成員七 (吳彥普)", "成員八 (未設定)"
+    ];
+    
+    const prefixes = Object.keys(livePasswords);
+    
+    prefixes.forEach((prefix, i) => {
+        // 使用 padEnd 讓名稱固定佔據 14 個字元寬度，達到整齊對齊的效果
+        const nameFormatted = (names[i] || `成員${i+1}`).padEnd(12, ' ');
+        msg += `${nameFormatted}  │  前綴: ${prefix}  │  密碼: ${livePasswords[prefix]}\n`;
     });
+
     alert(msg);
 }
-
 function changeCurrentPassword() {
     const newPassword = document.getElementById('newPasswordInput').value.trim();
     if (!newPassword) { alert("請輸入有效的新密碼！"); return; }
