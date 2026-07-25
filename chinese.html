@@ -55,7 +55,7 @@
             border-radius: 4px;
             font-size: 16px;
         }
-        textarea { height: 100px; resize: vertical; }
+        textarea { height: 100px; resize: vertical; word-break: break-all; }
         
         button {
             width: 100%;
@@ -236,6 +236,22 @@
         <div id="changelogBox" class="changelog-box hidden">
             
             <div class="changelog-item">
+                <span class="changelog-version">v3.6.0 (通用密碼加密機制調整)</span> <span class="changelog-date">2026/07</span>
+                <ul>
+                    <li><b>預設通用加密：</b>加密核心統一採用「公用通用密碼」，確保全團隊產出的密文百分之百無縫互通與還原。</li>
+                    <li><b>開關與字串清理保留：</b>完整維持動態第二重密碼開關與複製貼上自動過濾換行功能。</li>
+                </ul>
+            </div>
+
+            <div class="changelog-item">
+                <span class="changelog-version">v3.5.1</span> <span class="changelog-date">2026/07</span>
+                <ul>
+                    <li><b>全團隊密碼輪詢：</b>修復成員無法互相解密問題，系統解密時自動輪詢比對團隊內所有成員密碼與公用密碼。</li>
+                    <li><b>字串格式化清理：</b>解密前自動過濾所有空白與換行符號。</li>
+                </ul>
+            </div>
+
+            <div class="changelog-item">
                 <span class="changelog-version">v3.5.0</span> <span class="changelog-date">2026/07</span>
                 <ul>
                     <li><b>第二重密碼動態開關：</b>新增勾選開關，預設隱藏輸入框，維護 UI 清爽度。</li>
@@ -315,7 +331,7 @@ document.addEventListener('keydown', function(e) {
 });
 
 const SUPER_ADMIN_KEY = "jerrya1011201@cindya1011202";
-const PUBLIC_KEY = "COMMON_MEMBER_SHARED_SECRET_2026";
+const PUBLIC_KEY = "COMMON_MEMBER_SHARED_SECRET_2026"; // 🔑 通用通用密碼
 
 let livePasswords = {
     "user1": "userpass1", // 成員一 (小魚)
@@ -365,7 +381,7 @@ inputArea.addEventListener('paste', () => { setTimeout(() => { autoDetectAndDeco
 inputArea.addEventListener('input', () => { autoDetectAndDecode(); });
 
 function autoDetectAndDecode() {
-    const val = inputArea.value.trim();
+    const val = inputArea.value.replace(/\s+/g, '');
     if (val.length >= 56 && /^[0-9a-fA-F]+$/.test(val)) {
         decodeProcess();
     }
@@ -496,7 +512,8 @@ async function deriveKey(password, salt) {
 }
 
 async function encodeProcess() {
-    let baseKey = (currentRole === "admin") ? livePasswords[document.getElementById('encryptMode').value] : savedRawKey;
+    // 🌐 強制統一使用通用密碼作為第一層加密基礎
+    let baseKey = PUBLIC_KEY; 
     
     const isSecondPwEnabled = document.getElementById('toggleSecondPw').checked;
     const secondPass = isSecondPwEnabled ? document.getElementById('secondPassphrase').value.trim() : "";
@@ -525,7 +542,8 @@ async function encodeProcess() {
 }
 
 async function decodeProcess() {
-    const input = document.getElementById('inputText').value.trim();
+    // 🧹 過濾所有換行與空白字元
+    const input = document.getElementById('inputText').value.replace(/\s+/g, '');
     if (input.length < 56 || !/^[0-9a-fA-F]+$/.test(input)) {
         document.getElementById('outputText').value = "？？？";
         return;
@@ -534,11 +552,11 @@ async function decodeProcess() {
     const isSecondPwEnabled = document.getElementById('toggleSecondPw').checked;
     const secondPass = isSecondPwEnabled ? document.getElementById('secondPassphrase').value.trim() : "";
     
-    const rawCandidates = [savedRawKey, PUBLIC_KEY];
-    
-    if (currentRole === "admin") {
-        Object.values(livePasswords).forEach(pw => { if(!rawCandidates.includes(pw)) rawCandidates.push(pw); });
-    }
+    // 🔑 解密嘗試清單：優先嘗試合用通用密碼，同時亦保留成員密碼備用支援舊版相容
+    const rawCandidates = [PUBLIC_KEY, savedRawKey];
+    Object.values(livePasswords).forEach(pw => { 
+        if(!rawCandidates.includes(pw)) rawCandidates.push(pw); 
+    });
 
     const candidateKeys = rawCandidates.map(k => secondPass ? `${k}:::${secondPass}` : k);
 
