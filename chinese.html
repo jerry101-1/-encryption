@@ -56,9 +56,9 @@
             font-size: 16px;
         }
         textarea { height: 100px; resize: vertical; }
-        .btn-group { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        
         button {
-            flex: 1;
+            width: 100%;
             padding: 12px;
             border: none;
             border-radius: 4px;
@@ -66,35 +66,48 @@
             font-size: 15px;
             cursor: pointer;
             transition: background 0.2s;
-            min-width: 140px;
         }
-        .btn-encode-public { background-color: #3498db; }
-        .btn-encode-public:hover { background-color: #2980b9; }
-        .btn-encode-private { background-color: #8e44ad; }
-        .btn-encode-private:hover { background-color: #71368a; }
-        .btn-decode { background-color: #2ecc71; width: 100%; margin-top: 8px; }
+        .btn-encode { background-color: #3498db; font-weight: bold; }
+        .btn-encode:hover { background-color: #2980b9; }
+        .btn-decode { background-color: #2ecc71; margin-top: 10px; font-weight: bold; }
         .btn-decode:hover { background-color: #27ae60; }
-        .btn-copy { background-color: #e67e22; margin-top: 10px; width: 100%; }
+        .btn-copy { background-color: #e67e22; margin-top: 10px; }
         .btn-copy:hover { background-color: #d35400; }
-        .btn-verify { background-color: #16a085; margin-top: 10px; width: 100%; }
+        .btn-verify { background-color: #16a085; margin-top: 10px; }
         .btn-verify:hover { background-color: #117864; }
-        .btn-admin-view { background-color: #e74c3c; margin-bottom: 15px; width: 100%; font-weight: bold;}
+        .btn-admin-view { background-color: #e74c3c; margin-bottom: 15px; font-weight: bold;}
         .btn-admin-view:hover { background-color: #c0392b; }
-        .btn-open-pw-page { background-color: #34495e; width: 100%; margin-top: 25px; }
+        .btn-open-pw-page { background-color: #34495e; margin-top: 25px; }
         .btn-open-pw-page:hover { background-color: #2c3e50; }
-        .btn-change-pw { background-color: #e74c3c; margin-top: 10px; width: 100%; font-weight: bold; }
+        .btn-change-pw { background-color: #e74c3c; margin-top: 10px; font-weight: bold; }
         .btn-change-pw:hover { background-color: #c0392b; }
-        .btn-cancel { background-color: #7f8c8d; margin-top: 8px; width: 100%; }
+        .btn-cancel { background-color: #7f8c8d; margin-top: 8px; }
         .btn-cancel:hover { background-color: #95a5a6; }
-        .btn-changelog { background-color: #7f8c8d; width: 100%; margin-top: 15px; font-size: 13px; padding: 8px; }
+        .btn-changelog { background-color: #7f8c8d; margin-top: 15px; font-size: 13px; padding: 8px; }
         .btn-changelog:hover { background-color: #95a5a6; }
         
         .extra-pw-box {
             background-color: #fff3cd;
             border: 1px solid #ffeeba;
-            padding: 10px;
+            padding: 12px;
             border-radius: 6px;
             margin-bottom: 15px;
+        }
+
+        .switch-container {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            font-weight: bold;
+            color: #856404;
+        }
+
+        .switch-container input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+            cursor: pointer;
+            transform: scale(1.2);
         }
 
         .change-pw-container {
@@ -193,92 +206,95 @@
             <textarea id="inputText" placeholder="加密：輸入任意文字...&#10;解密：貼上密文自動解密..."></textarea>
         </div>
 
-        <div class="form-group extra-pw-box">
-            <label for="secondPassphrase" style="color: #856404;">第二重自訂密碼（選填/雙重加密）：</label>
-            <div class="password-wrapper">
-                <input type="password" id="secondPassphrase" placeholder="加密時設定此欄，解密也必須輸入相同密碼...">
-                <span class="toggle-eye" onclick="togglePasswordVisibility('secondPassphrase', this)">👁️</span>
+        <div class="extra-pw-box">
+            <label class="switch-container">
+                <input type="checkbox" id="toggleSecondPw" onchange="toggleSecondPwInput()">
+                🔒 開啟第二重自訂密碼（雙重加密防護）
+            </label>
+
+            <div id="secondPwWrapper" class="hidden" style="margin-top: 10px;">
+                <div class="password-wrapper">
+                    <input type="password" id="secondPassphrase" placeholder="加密時設定此欄，解密也必須輸入相同密碼...">
+                    <span class="toggle-eye" onclick="togglePasswordVisibility('secondPassphrase', this)">👁️</span>
+                </div>
             </div>
         </div>
 
-        <div class="btn-group">
-            <button class="btn-encode-public" onclick="encodeProcess('public')">全員互通</button>
-            <button class="btn-encode-private" onclick="encodeProcess('private')">個人加密</button>
-        </div>
-        
-        <button class="btn-decode" onclick="decodeProcess()">解密</button>
+        <button class="btn-encode" onclick="encodeProcess()">🔒 執行加密</button>
+        <button class="btn-decode" onclick="decodeProcess()">🔓 執行解密</button>
 
         <div class="form-group" style="margin-top: 20px;">
             <label for="outputText">處理結果輸出：</label>
             <textarea id="outputText" readonly placeholder="結果會顯示在這裡..."></textarea>
         </div>
 
-        <button class="btn-copy" onclick="copyResult()">一鍵複製結果</button>
+        <button class="btn-copy" onclick="copyResult()">📋 一鍵複製結果</button>
 
         <button class="btn-open-pw-page" onclick="showChangePasswordPage()">⚙️ 修改個人密碼</button>
 
-        <button class="btn-changelog" onclick="toggleChangelog()">檢視系統歷史更新日誌紀錄 (System Changelog)</button>
+        <button class="btn-changelog" onclick="toggleChangelog()">檢視系統更新日誌 (Changelog)</button>
         <div id="changelogBox" class="changelog-box hidden">
             
             <div class="changelog-item">
-                <span class="changelog-version">第 3.4.0 版本 (密碼可視化與安全驗證升級)</span> <span class="changelog-date">2026年07月</span>
+                <span class="changelog-version">v3.5.0</span> <span class="changelog-date">2026/07</span>
                 <ul>
-                    <li><b>眼睛切換按鈕功能：</b>全系統所有密碼輸入欄位（包含解鎖登入欄位、第二重密碼欄位、舊密碼驗證欄位、新密碼輸入欄位與新密碼二次確認欄位）皆全面新增「眼睛圖示」可視化按鈕，允許使用者自由切換密碼顯示為明碼或隱藏狀態。</li>
-                    <li><b>舊密碼安全性驗證：</b>修改個人密碼時，新增當前舊密碼校驗機制，避免非本人操作或誤觸。</li>
-                    <li><b>新密碼二次確認機制：</b>新增新密碼再次輸入比對機制，防止使用者因輸入錯誤字元導致後續無法存取系統。</li>
+                    <li><b>第二重密碼動態開關：</b>新增勾選開關，預設隱藏輸入框，維護 UI 清爽度。</li>
+                    <li><b>加密流程整合：</b>移除獨立「個人加密」鈕，統一為「執行加密」單一入口。</li>
                 </ul>
             </div>
 
             <div class="changelog-item">
-                <span class="changelog-version">第 3.3.0 版本 (獨立介面重構與安全登出流)</span> <span class="changelog-date">2026年07月</span>
+                <span class="changelog-version">v3.4.0</span> <span class="changelog-date">2026/07</span>
                 <ul>
-                    <li><b>獨立修改密碼選單頁面：</b>將原本附屬於主要介面底部的修改密碼區塊重構為獨立頁面，簡化主畫面視覺複雜度並提升操作直覺性。</li>
-                    <li><b>強制登出安全重置機制：</b>成功修改密碼後，系統會自動清空當前的身分驗證憑證與暫存金鑰，並強制將頁面重置切換回初始解鎖登入畫面，確保必須使用新密碼重新登入。</li>
-                    <li><b>取消返回功能：</b>獨立修改密碼頁面加入「取消返回」按鈕，允許使用者在中途取消修改並回歸主功能頁面。</li>
+                    <li><b>👁️ 密碼可視化：</b>全系統密碼欄位新增「眼睛」切換按鈕，可隨時檢視輸入內容。</li>
+                    <li><b>🔒 完整驗證流：</b>改密需要「輸入舊密碼」+「新密碼二次確認」，強化帳戶防護。</li>
                 </ul>
             </div>
 
             <div class="changelog-item">
-                <span class="changelog-version">第 3.2.0 版本 (雙重口令防禦架構)</span> <span class="changelog-date">2026年07月</span>
+                <span class="changelog-version">v3.3.0</span> <span class="changelog-date">2026/07</span>
                 <ul>
-                    <li><b>雙重口令加密機制：</b>新增選填式「第二重自訂密碼」功能，使用者可於加密時自行疊加私人專屬口令。</li>
-                    <li><b>最高層級防窺探保護：</b>透過個人通道金鑰與第二重口令進行複合金鑰衍生，即便擁有通道權限（包含超級管理員），未輸入正確的第二重口令依然無法還原任何文章內容。</li>
+                    <li><b>獨立改密頁面：</b>獨立選單並於修改完成後強制登出重新驗證。</li>
+                    <li><b>取消返回功能：</b>修改密碼頁面加入「取消」按鈕，方便中途返回主頁。</li>
                 </ul>
             </div>
 
             <div class="changelog-item">
-                <span class="changelog-version">第 3.0.0 版本 (軍規加密演算法升級)</span> <span class="changelog-date">2026年07月</span>
+                <span class="changelog-version">v3.2.0</span> <span class="changelog-date">2026/07</span>
                 <ul>
-                    <li><b>高級加密標準演算法升級：</b>核心加密機制全面升級至「高級加密標準 256 位元 伽羅瓦計數器模式 (Advanced Encryption Standard 256-bit Galois/Counter Mode)」。</li>
-                    <li><b>金鑰衍生函數防護：</b>採用「基於密碼的金鑰衍生函數第二版 (Password-Based Key Derivation Function 2)」，搭配安全雜湊演算法 256 位元 (Secure Hash Algorithm 256-bit) 進行 100,000 次反覆疊代計算。</li>
-                    <li><b>真隨機動態鹽值與初始向量：</b>每一次加密皆自動生成獨一無二的 16 位元組隨機鹽值 (Salt) 與 12 位元組初始向量 (Initialization Vector)。</li>
-                    <li><b>無前綴精簡密文格式：</b>完全移除舊版辨識標籤前綴，提高密文隱蔽性並精簡整體字元長度。</li>
+                    <li><b>雙重口令防禦：</b>新增選填「第二重密碼」，實現最高層級私人防窺保護。</li>
                 </ul>
             </div>
 
             <div class="changelog-item">
-                <span class="changelog-version">第 2.1.0 版本 (自動解密偵測與防護升級)</span> <span class="changelog-date">2026年06月</span>
+                <span class="changelog-version">v3.0.0</span> <span class="changelog-date">2026/07</span>
                 <ul>
-                    <li><b>貼上與輸入自動解密：</b>文字區域新增動態監聽，貼上或輸入合格密文時自動執行解密程序。</li>
-                    <li><b>開發人員工具防護：</b>新增網頁快捷鍵與滑鼠右鍵選單攔截，阻擋未授權調閱原始碼。</li>
+                    <li><b>加密演算法升級：</b>全面採用 AES-256-GCM + PBKDF2 (SHA-256, 10萬次疊代)。</li>
+                    <li><b>動態 Salt & IV：</b>每次加密隨機生成 16-byte Salt 與 12-byte IV。</li>
+                    <li><b>精簡密文格式：</b>移除前綴標籤，降低密文長度並提升隱蔽性。</li>
                 </ul>
             </div>
 
             <div class="changelog-item">
-                <span class="changelog-version">第 2.0.0 版本</span> <span class="changelog-date">2026年06月</span>
+                <span class="changelog-version">v2.1.0</span> <span class="changelog-date">2026/06</span>
                 <ul>
-                    <li><b>成員個人獨立通道：</b>建構成員獨立密碼體系，實施成員間數據隔離機制。</li>
-                    <li><b>超級管理員控制面板：</b>新增超級管理員存取權限，支援查看成員密碼表與跨通道管理。</li>
-                    <li><b>本地存儲同步機制：</b>新增瀏覽器本地存儲 (Local Storage) 功能，支援密碼變更紀錄儲存。</li>
+                    <li><b>自動解密：</b>貼上或輸入密文時自動觸發解密程序。</li>
+                    <li><b>防 F12：</b>封鎖右鍵選單與開發者工具快捷鍵。</li>
                 </ul>
             </div>
 
             <div class="changelog-item">
-                <span class="changelog-version">第 1.0.0 版本</span> <span class="changelog-date">2026年05月</span>
+                <span class="changelog-version">v2.0.0</span> <span class="changelog-date">2026/06</span>
                 <ul>
-                    <li><b>筆記本介面建立：</b>完成響應式介面設計與基礎文字輸入輸出區塊建置。</li>
-                    <li><b>全員通用互通通道：</b>建立共用預設金鑰機制，提供全團隊快速訊息傳遞功能。</li>
-                    <li><b>一鍵複製功能：</b>新增結果輸出區塊一鍵複製至剪貼簿功能。</li>
+                    <li><b>多成員通道隔離：</b>建立成員獨立密碼體系與 Admin 管理員面板。</li>
+                    <li><b>LocalStorage 同步：</b>支援瀏覽器本地密碼變更儲存。</li>
+                </ul>
+            </div>
+
+            <div class="changelog-item">
+                <span class="changelog-version">v1.0.0</span> <span class="changelog-date">2026/05</span>
+                <ul>
+                    <li><b>初始版本：</b>基礎筆記本 RWD 介面、通用共享通道與一鍵複製功能。</li>
                 </ul>
             </div>
 
@@ -315,6 +331,18 @@ let livePasswords = {
 let currentRole = "user"; 
 let currentUserAccount = ""; 
 let savedRawKey = "";    
+
+// 🔘 第二重密碼開關控制
+function toggleSecondPwInput() {
+    const isChecked = document.getElementById('toggleSecondPw').checked;
+    const wrapper = document.getElementById('secondPwWrapper');
+    if (isChecked) {
+        wrapper.classList.remove('hidden');
+    } else {
+        wrapper.classList.add('hidden');
+        document.getElementById('secondPassphrase').value = "";
+    }
+}
 
 // 👁️ 切換密碼顯示/隱藏
 function togglePasswordVisibility(inputId, eyeIcon) {
@@ -467,9 +495,11 @@ async function deriveKey(password, salt) {
     );
 }
 
-async function encodeProcess(type) {
-    let baseKey = (type === 'public') ? PUBLIC_KEY : ((currentRole === "admin") ? livePasswords[document.getElementById('encryptMode').value] : savedRawKey);
-    const secondPass = document.getElementById('secondPassphrase').value.trim();
+async function encodeProcess() {
+    let baseKey = (currentRole === "admin") ? livePasswords[document.getElementById('encryptMode').value] : savedRawKey;
+    
+    const isSecondPwEnabled = document.getElementById('toggleSecondPw').checked;
+    const secondPass = isSecondPwEnabled ? document.getElementById('secondPassphrase').value.trim() : "";
     
     const finalPassword = secondPass ? `${baseKey}:::${secondPass}` : baseKey;
     
@@ -501,7 +531,9 @@ async function decodeProcess() {
         return;
     }
 
-    const secondPass = document.getElementById('secondPassphrase').value.trim();
+    const isSecondPwEnabled = document.getElementById('toggleSecondPw').checked;
+    const secondPass = isSecondPwEnabled ? document.getElementById('secondPassphrase').value.trim() : "";
+    
     const rawCandidates = [savedRawKey, PUBLIC_KEY];
     
     if (currentRole === "admin") {
