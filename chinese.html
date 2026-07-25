@@ -23,7 +23,6 @@
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
         
-        /* 👁️ 密碼輸入框 + 顯示圖示容器 */
         .password-wrapper {
             position: relative;
             display: flex;
@@ -31,7 +30,7 @@
         }
         .password-wrapper input {
             width: 100%;
-            padding: 10px 40px 10px 10px; /* 留出右側放置眼睛按鈕的空間 */
+            padding: 10px 40px 10px 10px;
             box-sizing: border-box;
             border: 1px solid #ccc;
             border-radius: 4px;
@@ -114,10 +113,10 @@
             margin-top: 10px;
             font-size: 13px;
             line-height: 1.6;
-            max-height: 200px;
+            max-height: 250px;
             overflow-y: auto;
         }
-        .changelog-item { margin-bottom: 12px; }
+        .changelog-item { margin-bottom: 15px; }
         .changelog-version { font-weight: bold; color: #2c3e50; }
         .changelog-date { color: #7f8c8d; font-size: 12px; }
         
@@ -218,21 +217,71 @@
 
         <button class="btn-open-pw-page" onclick="showChangePasswordPage()">⚙️ 修改個人密碼</button>
 
-        <button class="btn-changelog" onclick="toggleChangelog()">檢視系統更新日誌 (Changelog)</button>
+        <button class="btn-changelog" onclick="toggleChangelog()">檢視系統歷史更新日誌紀錄 (System Changelog)</button>
         <div id="changelogBox" class="changelog-box hidden">
+            
             <div class="changelog-item">
-                <span class="changelog-version">v3.4.0</span> <span class="changelog-date">2026/07</span>
+                <span class="changelog-version">第 3.4.0 版本 (密碼可視化與安全驗證升級)</span> <span class="changelog-date">2026年07月</span>
                 <ul>
-                    <li><b>密碼可視化：</b>全系統密碼欄位新增「眼睛」切換按鈕，可隨時檢視輸入內容。</li>
-                    <li><b>完整驗證流：</b>改密需要「輸入舊密碼」+「新密碼二次確認」，強化帳戶防護。</li>
+                    <li><b>眼睛切換按鈕功能：</b>全系統所有密碼輸入欄位（包含解鎖登入欄位、第二重密碼欄位、舊密碼驗證欄位、新密碼輸入欄位與新密碼二次確認欄位）皆全面新增「眼睛圖示」可視化按鈕，允許使用者自由切換密碼顯示為明碼或隱藏狀態。</li>
+                    <li><b>舊密碼安全性驗證：</b>修改個人密碼時，新增當前舊密碼校驗機制，避免非本人操作或誤觸。</li>
+                    <li><b>新密碼二次確認機制：</b>新增新密碼再次輸入比對機制，防止使用者因輸入錯誤字元導致後續無法存取系統。</li>
                 </ul>
             </div>
+
             <div class="changelog-item">
-                <span class="changelog-version">v3.3.0</span> <span class="changelog-date">2026/07</span>
+                <span class="changelog-version">第 3.3.0 版本 (獨立介面重構與安全登出流)</span> <span class="changelog-date">2026年07月</span>
                 <ul>
-                    <li><b>獨立改密頁面：</b>獨立選單並於修改完成後強制登出重新驗證。</li>
+                    <li><b>獨立修改密碼選單頁面：</b>將原本附屬於主要介面底部的修改密碼區塊重構為獨立頁面，簡化主畫面視覺複雜度並提升操作直覺性。</li>
+                    <li><b>強制登出安全重置機制：</b>成功修改密碼後，系統會自動清空當前的身分驗證憑證與暫存金鑰，並強制將頁面重置切換回初始解鎖登入畫面，確保必須使用新密碼重新登入。</li>
+                    <li><b>取消返回功能：</b>獨立修改密碼頁面加入「取消返回」按鈕，允許使用者在中途取消修改並回歸主功能頁面。</li>
                 </ul>
             </div>
+
+            <div class="changelog-item">
+                <span class="changelog-version">第 3.2.0 版本 (雙重口令防禦架構)</span> <span class="changelog-date">2026年07月</span>
+                <ul>
+                    <li><b>雙重口令加密機制：</b>新增選填式「第二重自訂密碼」功能，使用者可於加密時自行疊加私人專屬口令。</li>
+                    <li><b>最高層級防窺探保護：</b>透過個人通道金鑰與第二重口令進行複合金鑰衍生，即便擁有通道權限（包含超級管理員），未輸入正確的第二重口令依然無法還原任何文章內容。</li>
+                </ul>
+            </div>
+
+            <div class="changelog-item">
+                <span class="changelog-version">第 3.0.0 版本 (軍規加密演算法升級)</span> <span class="changelog-date">2026年07月</span>
+                <ul>
+                    <li><b>高級加密標準演算法升級：</b>核心加密機制全面升級至「高級加密標準 256 位元 伽羅瓦計數器模式 (Advanced Encryption Standard 256-bit Galois/Counter Mode)」。</li>
+                    <li><b>金鑰衍生函數防護：</b>採用「基於密碼的金鑰衍生函數第二版 (Password-Based Key Derivation Function 2)」，搭配安全雜湊演算法 256 位元 (Secure Hash Algorithm 256-bit) 進行 100,000 次反覆疊代計算。</li>
+                    <li><b>真隨機動態鹽值與初始向量：</b>每一次加密皆自動生成獨一無二的 16 位元組隨機鹽值 (Salt) 與 12 位元組初始向量 (Initialization Vector)。</li>
+                    <li><b>無前綴精簡密文格式：</b>完全移除舊版辨識標籤前綴，提高密文隱蔽性並精簡整體字元長度。</li>
+                </ul>
+            </div>
+
+            <div class="changelog-item">
+                <span class="changelog-version">第 2.1.0 版本 (自動解密偵測與防護升級)</span> <span class="changelog-date">2026年06月</span>
+                <ul>
+                    <li><b>貼上與輸入自動解密：</b>文字區域新增動態監聽，貼上或輸入合格密文時自動執行解密程序。</li>
+                    <li><b>開發人員工具防護：</b>新增網頁快捷鍵與滑鼠右鍵選單攔截，阻擋未授權調閱原始碼。</li>
+                </ul>
+            </div>
+
+            <div class="changelog-item">
+                <span class="changelog-version">第 2.0.0 版本</span> <span class="changelog-date">2026年06月</span>
+                <ul>
+                    <li><b>成員個人獨立通道：</b>建構成員獨立密碼體系，實施成員間數據隔離機制。</li>
+                    <li><b>超級管理員控制面板：</b>新增超級管理員存取權限，支援查看成員密碼表與跨通道管理。</li>
+                    <li><b>本地存儲同步機制：</b>新增瀏覽器本地存儲 (Local Storage) 功能，支援密碼變更紀錄儲存。</li>
+                </ul>
+            </div>
+
+            <div class="changelog-item">
+                <span class="changelog-version">第 1.0.0 版本</span> <span class="changelog-date">2026年05月</span>
+                <ul>
+                    <li><b>筆記本介面建立：</b>完成響應式介面設計與基礎文字輸入輸出區塊建置。</li>
+                    <li><b>全員通用互通通道：</b>建立共用預設金鑰機制，提供全團隊快速訊息傳遞功能。</li>
+                    <li><b>一鍵複製功能：</b>新增結果輸出區塊一鍵複製至剪貼簿功能。</li>
+                </ul>
+            </div>
+
         </div>
 
     </div>
@@ -364,7 +413,6 @@ function changeCurrentPassword() {
         return;
     }
 
-    // 1. 驗證舊密碼是否正確
     let targetAcc = (currentRole === "admin") ? document.getElementById('encryptMode').value : currentUserAccount;
     let actualCurrentPassword = (currentRole === "admin") ? livePasswords[targetAcc] : savedRawKey;
 
@@ -373,7 +421,6 @@ function changeCurrentPassword() {
         return;
     }
 
-    // 2. 驗證新密碼與二次確認是否相符
     if (newPassword !== confirmPassword) {
         alert("❌ 兩次輸入的新密碼不一致，請重新檢查！");
         return;
@@ -384,13 +431,11 @@ function changeCurrentPassword() {
         return;
     }
 
-    // 3. 寫入變更
     livePasswords[targetAcc] = newPassword;
     localStorage.setItem('SYNC_MEMBER_KEYS', JSON.stringify(livePasswords));
     
     alert(`💾 密碼重設成功！系統將會進行登出，請使用新密碼重新登入。`);
     
-    // 4. 清空狀態並強制登出
     document.getElementById('oldPasswordInput').value = "";
     document.getElementById('newPasswordInput').value = "";
     document.getElementById('confirmPasswordInput').value = "";
@@ -399,7 +444,6 @@ function changeCurrentPassword() {
     currentUserAccount = "";
     currentRole = "user";
 
-    // 切換回登入頁
     document.getElementById('changePasswordBlock').classList.add('hidden');
     document.getElementById('mainBlock').classList.add('hidden');
     document.getElementById('adminMenuBlock').classList.add('hidden');
