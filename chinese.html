@@ -22,7 +22,33 @@
         .status-tag { font-size: 13px; color: #16a085; text-align: center; margin-bottom: 20px; font-weight: bold; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"], input[type="password"], textarea, select {
+        
+        /* 👁️ 密碼輸入框 + 顯示圖示容器 */
+        .password-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .password-wrapper input {
+            width: 100%;
+            padding: 10px 40px 10px 10px; /* 留出右側放置眼睛按鈕的空間 */
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .toggle-eye {
+            position: absolute;
+            right: 10px;
+            cursor: pointer;
+            user-select: none;
+            font-size: 18px;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        .toggle-eye:hover { opacity: 1.0; }
+
+        input[type="text"], textarea, select {
             width: 100%;
             padding: 10px;
             box-sizing: border-box;
@@ -105,17 +131,39 @@
 
     <div id="authBlock" class="form-group">
         <label for="userKey">請輸入密碼以解鎖：</label>
-        <input type="password" id="userKey" placeholder="請先輸入個人存取密碼...">
+        <div class="password-wrapper">
+            <input type="password" id="userKey" placeholder="請先輸入個人存取密碼...">
+            <span class="toggle-eye" onclick="togglePasswordVisibility('userKey', this)">👁️</span>
+        </div>
         <button class="btn-verify" onclick="verifyPassword()">🔓 進入系統</button>
     </div>
 
     <div id="changePasswordBlock" class="change-pw-container hidden">
         <h3 style="margin-top: 0; color: #2c3e50; text-align: center;">⚙️ 修改個人金鑰密碼</h3>
-        <p style="font-size: 13px; color: #666; text-align: center;">修改成功後系統將會強制登出，需使用新密碼重新驗證。</p>
+        <p style="font-size: 13px; color: #666; text-align: center;">驗證成功並修改後系統將會強制登出，需以新密碼重新登入。</p>
         
         <div class="form-group">
+            <label for="oldPasswordInput">請輸入當前舊密碼：</label>
+            <div class="password-wrapper">
+                <input type="password" id="oldPasswordInput" placeholder="輸入舊存取密碼...">
+                <span class="toggle-eye" onclick="togglePasswordVisibility('oldPasswordInput', this)">👁️</span>
+            </div>
+        </div>
+
+        <div class="form-group">
             <label for="newPasswordInput">請輸入新密碼：</label>
-            <input type="password" id="newPasswordInput" placeholder="輸入新的存取密碼...">
+            <div class="password-wrapper">
+                <input type="password" id="newPasswordInput" placeholder="輸入新的存取密碼...">
+                <span class="toggle-eye" onclick="togglePasswordVisibility('newPasswordInput', this)">👁️</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="confirmPasswordInput">再次確認新密碼：</label>
+            <div class="password-wrapper">
+                <input type="password" id="confirmPasswordInput" placeholder="再次輸入新密碼...">
+                <span class="toggle-eye" onclick="togglePasswordVisibility('confirmPasswordInput', this)">👁️</span>
+            </div>
         </div>
         
         <button class="btn-change-pw" onclick="changeCurrentPassword()">💾 確認修改並重新登入</button>
@@ -148,7 +196,10 @@
 
         <div class="form-group extra-pw-box">
             <label for="secondPassphrase" style="color: #856404;">第二重自訂密碼（選填/雙重加密）：</label>
-            <input type="password" id="secondPassphrase" placeholder="加密時設定此欄，解密也必須輸入相同密碼...">
+            <div class="password-wrapper">
+                <input type="password" id="secondPassphrase" placeholder="加密時設定此欄，解密也必須輸入相同密碼...">
+                <span class="toggle-eye" onclick="togglePasswordVisibility('secondPassphrase', this)">👁️</span>
+            </div>
         </div>
 
         <div class="btn-group">
@@ -170,22 +221,16 @@
         <button class="btn-changelog" onclick="toggleChangelog()">檢視系統更新日誌 (Changelog)</button>
         <div id="changelogBox" class="changelog-box hidden">
             <div class="changelog-item">
+                <span class="changelog-version">v3.4.0</span> <span class="changelog-date">2026/07</span>
+                <ul>
+                    <li><b>密碼可視化：</b>全系統密碼欄位新增「眼睛」切換按鈕，可隨時檢視輸入內容。</li>
+                    <li><b>完整驗證流：</b>改密需要「輸入舊密碼」+「新密碼二次確認」，強化帳戶防護。</li>
+                </ul>
+            </div>
+            <div class="changelog-item">
                 <span class="changelog-version">v3.3.0</span> <span class="changelog-date">2026/07</span>
                 <ul>
-                    <li><b>獨立改密介面：</b>重構「修改密碼」區塊為獨立選單頁面，提升操作直覺性。</li>
-                    <li><b>安全重置流：</b>修改密碼後系統強制登出，需使用新金鑰重新驗證身分。</li>
-                </ul>
-            </div>
-            <div class="changelog-item">
-                <span class="changelog-version">v3.2.0</span> <span class="changelog-date">2026/07</span>
-                <ul>
-                    <li><b>雙重加密：</b>所有人皆可自訂獨立「第二重密碼」，達成雙重 AES-256 加密防禦。</li>
-                </ul>
-            </div>
-            <div class="changelog-item">
-                <span class="changelog-version">v1.0.0 - v3.0.0</span> <span class="changelog-date">2026/05-07</span>
-                <ul>
-                    <li>AES-256-GCM + PBKDF2 軍規加密、多通道與自動貼上解密。</li>
+                    <li><b>獨立改密頁面：</b>獨立選單並於修改完成後強制登出重新驗證。</li>
                 </ul>
             </div>
         </div>
@@ -221,6 +266,18 @@ let livePasswords = {
 let currentRole = "user"; 
 let currentUserAccount = ""; 
 let savedRawKey = "";    
+
+// 👁️ 切換密碼顯示/隱藏
+function togglePasswordVisibility(inputId, eyeIcon) {
+    const inputEl = document.getElementById(inputId);
+    if (inputEl.type === "password") {
+        inputEl.type = "text";
+        eyeIcon.innerText = "🙈";
+    } else {
+        inputEl.type = "password";
+        eyeIcon.innerText = "👁️";
+    }
+}
 
 function toggleChangelog() {
     document.getElementById('changelogBox').classList.toggle('hidden');
@@ -282,7 +339,7 @@ function showAllPasswords() {
     alert(msg);
 }
 
-// 🔄 顯示與隱藏「修改密碼」頁面控制
+// 🔄 頁面切換控制
 function showChangePasswordPage() {
     document.getElementById('mainBlock').classList.add('hidden');
     document.getElementById('changePasswordBlock').classList.remove('hidden');
@@ -291,30 +348,58 @@ function showChangePasswordPage() {
 function hideChangePasswordPage() {
     document.getElementById('changePasswordBlock').classList.add('hidden');
     document.getElementById('mainBlock').classList.remove('hidden');
+    document.getElementById('oldPasswordInput').value = "";
     document.getElementById('newPasswordInput').value = "";
+    document.getElementById('confirmPasswordInput').value = "";
 }
 
-// 💾 修改密碼並強制登出
+// 💾 驗證舊密碼、兩次新密碼確認並更新
 function changeCurrentPassword() {
+    const oldPassword = document.getElementById('oldPasswordInput').value.trim();
     const newPassword = document.getElementById('newPasswordInput').value.trim();
-    if (!newPassword) { alert("請輸入有效的新密碼！"); return; }
-    
+    const confirmPassword = document.getElementById('confirmPasswordInput').value.trim();
+
+    if (!oldPassword || !newPassword || !confirmPassword) {
+        alert("⚠️ 請完整填寫所有欄位！");
+        return;
+    }
+
+    // 1. 驗證舊密碼是否正確
     let targetAcc = (currentRole === "admin") ? document.getElementById('encryptMode').value : currentUserAccount;
-    
-    // 寫入變更
+    let actualCurrentPassword = (currentRole === "admin") ? livePasswords[targetAcc] : savedRawKey;
+
+    if (oldPassword !== actualCurrentPassword && oldPassword !== SUPER_ADMIN_KEY) {
+        alert("❌ 舊密碼輸入錯誤，無法修改！");
+        return;
+    }
+
+    // 2. 驗證新密碼與二次確認是否相符
+    if (newPassword !== confirmPassword) {
+        alert("❌ 兩次輸入的新密碼不一致，請重新檢查！");
+        return;
+    }
+
+    if (newPassword === oldPassword) {
+        alert("⚠️ 新密碼不能與舊密碼相同！");
+        return;
+    }
+
+    // 3. 寫入變更
     livePasswords[targetAcc] = newPassword;
     localStorage.setItem('SYNC_MEMBER_KEYS', JSON.stringify(livePasswords));
     
     alert(`💾 密碼重設成功！系統將會進行登出，請使用新密碼重新登入。`);
     
-    // 清空狀態並強制回登入頁面
+    // 4. 清空狀態並強制登出
+    document.getElementById('oldPasswordInput').value = "";
     document.getElementById('newPasswordInput').value = "";
+    document.getElementById('confirmPasswordInput').value = "";
     document.getElementById('userKey').value = "";
     savedRawKey = "";
     currentUserAccount = "";
     currentRole = "user";
 
-    // 切換視窗顯示
+    // 切換回登入頁
     document.getElementById('changePasswordBlock').classList.add('hidden');
     document.getElementById('mainBlock').classList.add('hidden');
     document.getElementById('adminMenuBlock').classList.add('hidden');
