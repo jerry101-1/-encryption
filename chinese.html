@@ -55,8 +55,12 @@
         .btn-verify:hover { background-color: #117864; }
         .btn-admin-view { background-color: #e74c3c; margin-bottom: 15px; width: 100%; font-weight: bold;}
         .btn-admin-view:hover { background-color: #c0392b; }
-        .btn-change-pw { background-color: #34495e; margin-top: 5px; width: 100%; }
-        .btn-change-pw:hover { background-color: #2c3e50; }
+        .btn-open-pw-page { background-color: #34495e; width: 100%; margin-top: 25px; }
+        .btn-open-pw-page:hover { background-color: #2c3e50; }
+        .btn-change-pw { background-color: #e74c3c; margin-top: 10px; width: 100%; font-weight: bold; }
+        .btn-change-pw:hover { background-color: #c0392b; }
+        .btn-cancel { background-color: #7f8c8d; margin-top: 8px; width: 100%; }
+        .btn-cancel:hover { background-color: #95a5a6; }
         .btn-changelog { background-color: #7f8c8d; width: 100%; margin-top: 15px; font-size: 13px; padding: 8px; }
         .btn-changelog:hover { background-color: #95a5a6; }
         
@@ -66,6 +70,14 @@
             padding: 10px;
             border-radius: 6px;
             margin-bottom: 15px;
+        }
+
+        .change-pw-container {
+            background-color: #f8f9fa;
+            border: 1px solid #dcdfe6;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
         }
         
         .changelog-box {
@@ -95,6 +107,19 @@
         <label for="userKey">請輸入密碼以解鎖：</label>
         <input type="password" id="userKey" placeholder="請先輸入個人存取密碼...">
         <button class="btn-verify" onclick="verifyPassword()">🔓 進入系統</button>
+    </div>
+
+    <div id="changePasswordBlock" class="change-pw-container hidden">
+        <h3 style="margin-top: 0; color: #2c3e50; text-align: center;">⚙️ 修改個人金鑰密碼</h3>
+        <p style="font-size: 13px; color: #666; text-align: center;">修改成功後系統將會強制登出，需使用新密碼重新驗證。</p>
+        
+        <div class="form-group">
+            <label for="newPasswordInput">請輸入新密碼：</label>
+            <input type="password" id="newPasswordInput" placeholder="輸入新的存取密碼...">
+        </div>
+        
+        <button class="btn-change-pw" onclick="changeCurrentPassword()">💾 確認修改並重新登入</button>
+        <button class="btn-cancel" onclick="hideChangePasswordPage()">❌ 取消返回</button>
     </div>
 
     <div id="mainBlock" class="hidden">
@@ -140,32 +165,27 @@
 
         <button class="btn-copy" onclick="copyResult()">一鍵複製結果</button>
 
-        <div class="form-group" style="border-top: 1px dashed #ccc; padding-top: 15px; margin-top: 25px;">
-            <label for="newPasswordInput">修改個人密碼</label>
-            <input type="password" id="newPasswordInput" placeholder="請輸入想要變更的新密碼...">
-            <button class="btn-change-pw" onclick="changeCurrentPassword()">確認修改</button>
-        </div>
+        <button class="btn-open-pw-page" onclick="showChangePasswordPage()">⚙️ 修改個人密碼</button>
 
         <button class="btn-changelog" onclick="toggleChangelog()">檢視系統更新日誌 (Changelog)</button>
         <div id="changelogBox" class="changelog-box hidden">
             <div class="changelog-item">
+                <span class="changelog-version">v3.3.0</span> <span class="changelog-date">2026/07</span>
+                <ul>
+                    <li><b>獨立改密介面：</b>重構「修改密碼」區塊為獨立選單頁面，提升操作直覺性。</li>
+                    <li><b>安全重置流：</b>修改密碼後系統強制登出，需使用新金鑰重新驗證身分。</li>
+                </ul>
+            </div>
+            <div class="changelog-item">
                 <span class="changelog-version">v3.2.0</span> <span class="changelog-date">2026/07</span>
                 <ul>
                     <li><b>雙重加密：</b>所有人皆可自訂獨立「第二重密碼」，達成雙重 AES-256 加密防禦。</li>
-                    <li><b>防窺探：</b>即使擁有通道密碼，未輸入正確第二重密碼一樣無法還原內容。</li>
                 </ul>
             </div>
             <div class="changelog-item">
-                <span class="changelog-version">v3.0.0</span> <span class="changelog-date">2026/07</span>
+                <span class="changelog-version">v1.0.0 - v3.0.0</span> <span class="changelog-date">2026/05-07</span>
                 <ul>
-                    <li>全面升級至 AES-256-GCM + PBKDF2 (100,000次迭代)。</li>
-                    <li>完全移除前綴，增強密文隱蔽性與長度精簡。</li>
-                </ul>
-            </div>
-            <div class="changelog-item">
-                <span class="changelog-version">v1.0.0 - v2.1.0</span> <span class="changelog-date">2026/05-07</span>
-                <ul>
-                    <li>基礎筆記本、多通道隔離與自動貼上解密功能上線。</li>
+                    <li>AES-256-GCM + PBKDF2 軍規加密、多通道與自動貼上解密。</li>
                 </ul>
             </div>
         </div>
@@ -262,21 +282,48 @@ function showAllPasswords() {
     alert(msg);
 }
 
+// 🔄 顯示與隱藏「修改密碼」頁面控制
+function showChangePasswordPage() {
+    document.getElementById('mainBlock').classList.add('hidden');
+    document.getElementById('changePasswordBlock').classList.remove('hidden');
+}
+
+function hideChangePasswordPage() {
+    document.getElementById('changePasswordBlock').classList.add('hidden');
+    document.getElementById('mainBlock').classList.remove('hidden');
+    document.getElementById('newPasswordInput').value = "";
+}
+
+// 💾 修改密碼並強制登出
 function changeCurrentPassword() {
     const newPassword = document.getElementById('newPasswordInput').value.trim();
     if (!newPassword) { alert("請輸入有效的新密碼！"); return; }
+    
     let targetAcc = (currentRole === "admin") ? document.getElementById('encryptMode').value : currentUserAccount;
     
+    // 寫入變更
     livePasswords[targetAcc] = newPassword;
     localStorage.setItem('SYNC_MEMBER_KEYS', JSON.stringify(livePasswords));
     
-    alert(`💾 修改成功！密碼已重設為：${newPassword}`);
+    alert(`💾 密碼重設成功！系統將會進行登出，請使用新密碼重新登入。`);
+    
+    // 清空狀態並強制回登入頁面
     document.getElementById('newPasswordInput').value = "";
-    if (currentRole !== "admin") savedRawKey = newPassword;
+    document.getElementById('userKey').value = "";
+    savedRawKey = "";
+    currentUserAccount = "";
+    currentRole = "user";
+
+    // 切換視窗顯示
+    document.getElementById('changePasswordBlock').classList.add('hidden');
+    document.getElementById('mainBlock').classList.add('hidden');
+    document.getElementById('adminMenuBlock').classList.add('hidden');
+    document.getElementById('adminViewBtn').classList.add('hidden');
+    document.getElementById('authBlock').classList.remove('hidden');
 }
 
 // -------------------------------------------------------------
-// 🔐 加解密核心演算法 (支援金鑰串接)
+// 🔐 加解密核心演算法
 // -------------------------------------------------------------
 
 async function deriveKey(password, salt) {
@@ -295,7 +342,6 @@ async function encodeProcess(type) {
     let baseKey = (type === 'public') ? PUBLIC_KEY : ((currentRole === "admin") ? livePasswords[document.getElementById('encryptMode').value] : savedRawKey);
     const secondPass = document.getElementById('secondPassphrase').value.trim();
     
-    // 💡 如果填了第二重密碼，將兩把密碼組合成複合金鑰進行衍生
     const finalPassword = secondPass ? `${baseKey}:::${secondPass}` : baseKey;
     
     const input = document.getElementById('inputText').value;
@@ -333,7 +379,6 @@ async function decodeProcess() {
         Object.values(livePasswords).forEach(pw => { if(!rawCandidates.includes(pw)) rawCandidates.push(pw); });
     }
 
-    // 組合候選密碼（包含第二重密碼情況）
     const candidateKeys = rawCandidates.map(k => secondPass ? `${k}:::${secondPass}` : k);
 
     const saltHex = input.substring(0, 32);
