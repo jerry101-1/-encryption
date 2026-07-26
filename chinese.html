@@ -112,11 +112,16 @@
             transition: background-color 0.3s, color 0.3s;
         }
 
+        /* 頂部標題列：左側佔位、中間標題居中、右側按鈕 */
         .header-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 10px;
+        }
+
+        .header-placeholder {
+            width: 70px; /* 與主題按鈕寬度一致，確保完美置中 */
         }
 
         .theme-toggle-btn {
@@ -127,10 +132,18 @@
             border-radius: 20px;
             cursor: pointer;
             font-size: 14px;
-            width: auto;
+            width: 70px;
+            text-align: center;
+            box-sizing: border-box;
         }
 
-        h2 { text-align: center; color: var(--text-color); margin: 0; flex-grow: 1; }
+        h2 { 
+            text-align: center; 
+            color: var(--text-color); 
+            margin: 0; 
+            flex-grow: 1; 
+        }
+
         .status-tag { font-size: 13px; color: #16a085; text-align: center; margin-bottom: 20px; font-weight: bold; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
@@ -347,7 +360,7 @@
 <body>
 
     <div class="header-bar">
-        <h2>📝 筆記本</h2>
+        <div class="header-placeholder"></div> <h2>📝 筆記本</h2>
         <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeBtn">🌙 深色</button>
     </div>
     <div id="syncStatus" class="status-tag">連線雲端資料庫中...</div>
