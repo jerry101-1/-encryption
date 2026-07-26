@@ -7,18 +7,56 @@
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/16524/16524311.png" type="image/png">
 
     <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --sub-text: #7f8c8d;
+            --border-color: #ccc;
+            --box-bg: #f8f9fa;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text-color: #e0e0e0;
+            --sub-text: #aaaaaa;
+            --border-color: #444444;
+            --box-bg: #383838;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             max-width: 600px;
             margin: 40px auto;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            background: #fff;
+            background: var(--card-bg);
+            transition: background-color 0.3s, color 0.3s;
         }
-        h2 { text-align: center; color: #2c3e50; margin-bottom: 5px; }
+
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .theme-toggle-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 5px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            width: auto;
+        }
+
+        h2 { text-align: center; color: var(--text-color); margin: 0; flex-grow: 1; }
         .status-tag { font-size: 13px; color: #16a085; text-align: center; margin-bottom: 20px; font-weight: bold; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
@@ -32,7 +70,9 @@
             width: 100%;
             padding: 10px 40px 10px 10px;
             box-sizing: border-box;
-            border: 1px solid #ccc;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-color);
             border-radius: 4px;
             font-size: 16px;
         }
@@ -51,12 +91,21 @@
             width: 100%;
             padding: 10px;
             box-sizing: border-box;
-            border: 1px solid #ccc;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-color);
             border-radius: 4px;
             font-size: 16px;
         }
         textarea { height: 100px; resize: vertical; word-break: break-all; }
         
+        .counter-info {
+            font-size: 12px;
+            color: var(--sub-text);
+            text-align: right;
+            margin-top: 4px;
+        }
+
         button {
             width: 100%;
             padding: 12px;
@@ -85,10 +134,12 @@
         .btn-cancel:hover { background-color: #95a5a6; }
         .btn-changelog { background-color: #7f8c8d; margin-top: 15px; font-size: 13px; padding: 8px; }
         .btn-changelog:hover { background-color: #95a5a6; }
-        
+        .btn-download { background-color: #9b59b6; margin-top: 10px; font-weight: bold; }
+        .btn-download:hover { background-color: #8e44ad; }
+
         .extra-pw-box {
-            background-color: #fff3cd;
-            border: 1px solid #ffeeba;
+            background-color: var(--box-bg);
+            border: 1px solid var(--border-color);
             padding: 12px;
             border-radius: 6px;
             margin-bottom: 15px;
@@ -100,7 +151,6 @@
             cursor: pointer;
             user-select: none;
             font-weight: bold;
-            color: #856404;
         }
 
         .switch-container input[type="checkbox"] {
@@ -111,16 +161,16 @@
         }
 
         .change-pw-container {
-            background-color: #f8f9fa;
-            border: 1px solid #dcdfe6;
+            background-color: var(--box-bg);
+            border: 1px solid var(--border-color);
             padding: 20px;
             border-radius: 8px;
             margin-top: 15px;
         }
         
         .changelog-box {
-            background-color: #f8f9fa;
-            border: 1px solid #e9ecef;
+            background-color: var(--box-bg);
+            border: 1px solid var(--border-color);
             border-radius: 6px;
             padding: 15px;
             margin-top: 10px;
@@ -130,15 +180,35 @@
             overflow-y: auto;
         }
         .changelog-item { margin-bottom: 15px; }
-        .changelog-version { font-weight: bold; color: #2c3e50; }
-        .changelog-date { color: #7f8c8d; font-size: 12px; }
+        .changelog-version { font-weight: bold; }
+        .changelog-date { color: var(--sub-text); font-size: 12px; }
+
+        /* 檔案上傳區塊 */
+        .file-upload-box {
+            border: 2px dashed var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+            background-color: var(--box-bg);
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+        .preview-media {
+            max-width: 100%;
+            max-height: 200px;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
         
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <h2>📝 筆記本</h2>
+    <div class="header-bar">
+        <h2>📝 筆記本</h2>
+        <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeBtn">🌙 深色</button>
+    </div>
     <div id="syncStatus" class="status-tag">連線雲端資料庫中...</div>
 
     <div id="authBlock" class="form-group">
@@ -151,8 +221,8 @@
     </div>
 
     <div id="changePasswordBlock" class="change-pw-container hidden">
-        <h3 style="margin-top: 0; color: #2c3e50; text-align: center;">⚙️ 修改個人金鑰密碼</h3>
-        <p style="font-size: 13px; color: #666; text-align: center;">驗證成功並修改後系統將會強制登出，需以新密碼重新登入。</p>
+        <h3 style="margin-top: 0; text-align: center;">⚙️ 修改個人金鑰密碼</h3>
+        <p style="font-size: 13px; color: var(--sub-text); text-align: center;">驗證成功並修改後系統將會強制登出，需以新密碼重新登入。</p>
         
         <div class="form-group">
             <label for="oldPasswordInput">請輸入當前舊密碼：</label>
@@ -198,12 +268,19 @@
                 <option value="user7">成員七 (吳彥普)</option>
                 <option value="user8">成員八</option>
             </select>
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
+        </div>
+
+        <div class="file-upload-box" onclick="document.getElementById('fileInput').click()">
+            📎 點擊選擇檔案/圖片進行加密（選填）
+            <input type="file" id="fileInput" class="hidden" onchange="handleFileSelect(event)">
+            <div id="fileNameDisplay" style="font-size: 13px; margin-top: 5px; color: #3498db; font-weight: bold;"></div>
         </div>
 
         <div class="form-group">
             <label for="inputText">輸入內文字：</label>
-            <textarea id="inputText" placeholder="加密：輸入任意文字...&#10;解密：貼上密文自動解密..."></textarea>
+            <textarea id="inputText" placeholder="加密：輸入任意文字...&#10;解密：貼上密文自動解密..." oninput="updateInputCounter()"></textarea>
+            <div id="inputCounter" class="counter-info">字數: 0 | 含空白: 0</div>
         </div>
 
         <div class="extra-pw-box">
@@ -225,92 +302,107 @@
 
         <div class="form-group" style="margin-top: 20px;">
             <label for="outputText">處理結果輸出：</label>
-            <textarea id="outputText" readonly placeholder="結果會顯示在這裡..."></textarea>
+            <textarea id="outputText" readonly placeholder="結果會顯示在這裡..." oninput="updateOutputCounter()"></textarea>
+            <div id="outputCounter" class="counter-info">長度: 0 字符 | 大小: 0 KB</div>
+        </div>
+
+        <div id="fileResultBlock" class="hidden" style="text-align: center; margin-top: 10px;">
+            <img id="imagePreview" class="preview-media hidden" src="" alt="解密圖片預覽">
+            <button id="downloadFileBtn" class="btn-download" onclick="downloadDecryptedFile()">💾 下載解密檔案</button>
         </div>
 
         <button class="btn-copy" onclick="copyResult()">📋 一鍵複製結果</button>
 
         <button class="btn-open-pw-page" onclick="showChangePasswordPage()">⚙️ 修改個人密碼</button>
 
-        <button class="btn-changelog" onclick="toggleChangelog()">檢視系統更新日誌 (Changelog)</button>
+        <button class="btn-changelog" onclick="toggleChangelog()">📜 檢視系統更新日誌 (Changelog)</button>
         <div id="changelogBox" class="changelog-box hidden">
             
             <div class="changelog-item">
-                <span class="changelog-version">v3.6.0 (通用密碼加密機制調整)</span> <span class="changelog-date">2026/07</span>
+                <span class="changelog-version">🚀 v4.0.0 (全能大版本升級)</span> <span class="changelog-date">2026/07</span>
                 <ul>
-                    <li><b>預設通用加密：</b>加密核心統一採用「公用通用密碼」，確保全團隊產出的密文百分之百無縫互通與還原。</li>
-                    <li><b>開關與字串清理保留：</b>完整維持動態第二重密碼開關與複製貼上自動過濾換行功能。</li>
+                    <li><b>🌓 深色/淺色模式：</b>新增主題切換按鈕，支援系統自動記憶閱讀偏好。</li>
+                    <li><b>📊 字數與容量統計：</b>新增即時字數統計（含/不含空白）與密文容量大小提示。</li>
+                    <li><b>📁 檔案與圖片加密：</b>支援上傳圖片/檔案進行加密，解密自動還原圖片預覽與下載。</li>
                 </ul>
             </div>
 
             <div class="changelog-item">
-                <span class="changelog-version">v3.5.1</span> <span class="changelog-date">2026/07</span>
+                <span class="changelog-version">🔑 v3.6.0 (通用密碼加密機制調整)</span> <span class="changelog-date">2026/07</span>
                 <ul>
-                    <li><b>全團隊密碼輪詢：</b>修復成員無法互相解密問題，系統解密時自動輪詢比對團隊內所有成員密碼與公用密碼。</li>
-                    <li><b>字串格式化清理：</b>解密前自動過濾所有空白與換行符號。</li>
+                    <li><b>🌐 預設通用加密：</b>加密核心統一採用「公用通用密碼」，確保全團隊產出的密文百分之百無縫互通與還原。</li>
+                    <li><b>🛡️ 開關與清理保留：</b>完整維持動態第二重密碼開關與複製貼上自動過濾換行功能。</li>
                 </ul>
             </div>
 
             <div class="changelog-item">
-                <span class="changelog-version">v3.5.0</span> <span class="changelog-date">2026/07</span>
+                <span class="changelog-version">🛠️ v3.5.1 (解密匹配漏洞修復)</span> <span class="changelog-date">2026/07</span>
                 <ul>
-                    <li><b>第二重密碼動態開關：</b>新增勾選開關，預設隱藏輸入框，維護 UI 清爽度。</li>
-                    <li><b>加密流程整合：</b>移除獨立「個人加密」鈕，統一為「執行加密」單一入口。</li>
+                    <li><b>🔄 全團隊密碼輪詢：</b>修復成員無法互相解密問題，系統解密時自動輪詢比對團隊內所有成員密碼與公用密碼。</li>
+                    <li><b>🧹 字串格式化清理：</b>解密前自動過濾所有空白與換行符號。</li>
                 </ul>
             </div>
 
             <div class="changelog-item">
-                <span class="changelog-version">v3.4.0</span> <span class="changelog-date">2026/07</span>
+                <span class="changelog-version">✨ v3.5.0 (UI 與加密流程簡化)</span> <span class="changelog-date">2026/07</span>
+                <ul>
+                    <li><b>🔘 第二重密碼動態開關：</b>新增勾選開關，預設隱藏輸入框，維護 UI 清爽度。</li>
+                    <li><b>🎯 加密流程整合：</b>移除獨立「個人加密」鈕，統一為「執行加密」單一入口。</li>
+                </ul>
+            </div>
+
+            <div class="changelog-item">
+                <span class="changelog-version">🔒 v3.4.0 (安全性與體驗提升)</span> <span class="changelog-date">2026/07</span>
                 <ul>
                     <li><b>👁️ 密碼可視化：</b>全系統密碼欄位新增「眼睛」切換按鈕，可隨時檢視輸入內容。</li>
-                    <li><b>🔒 完整驗證流：</b>改密需要「輸入舊密碼」+「新密碼二次確認」，強化帳戶防護。</li>
+                    <li><b>🛡️ 完整驗證流：</b>改密需要「輸入舊密碼」+「新密碼二次確認」，強化帳戶防護。</li>
                 </ul>
             </div>
 
             <div class="changelog-item">
-                <span class="changelog-version">v3.3.0</span> <span class="changelog-date">2026/07</span>
+                <span class="changelog-version">⚙️ v3.3.0 (獨立改密機制)</span> <span class="changelog-date">2026/07</span>
                 <ul>
-                    <li><b>獨立改密頁面：</b>獨立選單並於修改完成後強制登出重新驗證。</li>
-                    <li><b>取消返回功能：</b>修改密碼頁面加入「取消」按鈕，方便中途返回主頁。</li>
+                    <li><b>🖥️ 獨立改密頁面：</b>獨立選單並於修改完成後強制登出重新驗證。</li>
+                    <li><b>❌ 取消返回功能：</b>修改密碼頁面加入「取消」按鈕，方便中途返回主頁。</li>
                 </ul>
             </div>
 
             <div class="changelog-item">
-                <span class="changelog-version">v3.2.0</span> <span class="changelog-date">2026/07</span>
+                <span class="changelog-version">🛡️ v3.2.0 (雙重口令防衛)</span> <span class="changelog-date">2026/07</span>
                 <ul>
-                    <li><b>雙重口令防禦：</b>新增選填「第二重密碼」，實現最高層級私人防窺保護。</li>
+                    <li><b>🔐 雙重口令防禦：</b>新增選填「第二重密碼」，實現最高層級私人防窺保護。</li>
                 </ul>
             </div>
 
             <div class="changelog-item">
-                <span class="changelog-version">v3.0.0</span> <span class="changelog-date">2026/07</span>
+                <span class="changelog-version">🔐 v3.0.0 (演算法重大升級)</span> <span class="changelog-date">2026/07</span>
                 <ul>
-                    <li><b>加密演算法升級：</b>全面採用 AES-256-GCM + PBKDF2 (SHA-256, 10萬次疊代)。</li>
-                    <li><b>動態 Salt & IV：</b>每次加密隨機生成 16-byte Salt 與 12-byte IV。</li>
-                    <li><b>精簡密文格式：</b>移除前綴標籤，降低密文長度並提升隱蔽性。</li>
+                    <li><b>強化的加密演算法：</b>全面採用 AES-256-GCM + PBKDF2 (SHA-256, 10萬次疊代)。</li>
+                    <li><b>🎲 動態 Salt & IV：</b>每次加密隨機生成 16-byte Salt 與 12-byte IV。</li>
+                    <li><b>📦 精簡密文格式：</b>移除前綴標籤，降低密文長度並提升隱蔽性。</li>
                 </ul>
             </div>
 
             <div class="changelog-item">
-                <span class="changelog-version">v2.1.0</span> <span class="changelog-date">2026/06</span>
+                <span class="changelog-version">⚡ v2.1.0 (自動解密與防護)</span> <span class="changelog-date">2026/06</span>
                 <ul>
-                    <li><b>自動解密：</b>貼上或輸入密文時自動觸發解密程序。</li>
-                    <li><b>防 F12：</b>封鎖右鍵選單與開發者工具快捷鍵。</li>
+                    <li><b>📋 自動解密：</b>貼上或輸入密文時自動觸發解密程序。</li>
+                    <li><b>🚫 防 F12：</b>封鎖右鍵選單與開發者工具快捷鍵。</li>
                 </ul>
             </div>
 
             <div class="changelog-item">
-                <span class="changelog-version">v2.0.0</span> <span class="changelog-date">2026/06</span>
+                <span class="changelog-version">👥 v2.0.0 (多帳號團隊體系)</span> <span class="changelog-date">2026/06</span>
                 <ul>
-                    <li><b>多成員通道隔離：</b>建立成員獨立密碼體系與 Admin 管理員面板。</li>
-                    <li><b>LocalStorage 同步：</b>支援瀏覽器本地密碼變更儲存。</li>
+                    <li><b>通道隔離：</b>建立成員獨立密碼體系與 Admin 管理員面板。</li>
+                    <li><b>💾 LocalStorage 同步：</b>支援瀏覽器本地密碼變更儲存。</li>
                 </ul>
             </div>
 
             <div class="changelog-item">
-                <span class="changelog-version">v1.0.0</span> <span class="changelog-date">2026/05</span>
+                <span class="changelog-version">🎉 v1.0.0 (初始版本誕生)</span> <span class="changelog-date">2026/05</span>
                 <ul>
-                    <li><b>初始版本：</b>基礎筆記本 RWD 介面、通用共享通道與一鍵複製功能。</li>
+                    <li><b>基礎版本：</b>基礎筆記本 RWD 介面、通用共享通道與一鍵複製功能。</li>
                 </ul>
             </div>
 
@@ -331,22 +423,74 @@ document.addEventListener('keydown', function(e) {
 });
 
 const SUPER_ADMIN_KEY = "jerrya1011201@cindya1011202";
-const PUBLIC_KEY = "COMMON_MEMBER_SHARED_SECRET_2026"; // 🔑 通用通用密碼
+const PUBLIC_KEY = "COMMON_MEMBER_SHARED_SECRET_2026"; 
 
 let livePasswords = {
-    "user1": "userpass1", // 成員一 (小魚)
-    "user2": "Kris@Lucy",  // 成員二 (Kris)
-    "user3": "userpass3",  // 成員三 (林沐恩)
+    "user1": "userpass1", 
+    "user2": "Kris@Lucy",  
+    "user3": "userpass3",  
     "user4": "userpass4",
     "user5": "userpass5",
     "user6": "userpass6",
-    "user7": "userpass7",  // 成員七 (吳彥普)
+    "user7": "userpass7",  
     "user8": "userpass8"
 };
 
 let currentRole = "user"; 
 let currentUserAccount = ""; 
 let savedRawKey = "";    
+let uploadedFilePayload = null;
+let decryptedFileData = null;
+
+// 🌓 深色模式切換
+function toggleTheme() {
+    const currentTheme = document.body.getAttribute('data-theme');
+    const btn = document.getElementById('themeBtn');
+    if (currentTheme === 'dark') {
+        document.body.removeAttribute('data-theme');
+        btn.innerText = "🌙 深色";
+        localStorage.setItem('APP_THEME', 'light');
+    } else {
+        document.body.setAttribute('data-theme', 'dark');
+        btn.innerText = "☀️ 淺色";
+        localStorage.setItem('APP_THEME', 'dark');
+    }
+}
+if(localStorage.getItem('APP_THEME') === 'dark') {
+    document.body.setAttribute('data-theme', 'dark');
+    document.getElementById('themeBtn').innerText = "☀️ 淺色";
+}
+
+// 📊 字數統計
+function updateInputCounter() {
+    const val = document.getElementById('inputText').value;
+    const lenWithSpace = val.length;
+    const lenNoSpace = val.replace(/\s+/g, '').length;
+    document.getElementById('inputCounter').innerText = `字數: ${lenNoSpace} | 含空白: ${lenWithSpace}`;
+}
+
+function updateOutputCounter() {
+    const val = document.getElementById('outputText').value;
+    const bytes = new TextEncoder().encode(val).length;
+    const kb = (bytes / 1024).toFixed(2);
+    document.getElementById('outputCounter').innerText = `長度: ${val.length} 字符 | 大小: ${kb} KB`;
+}
+
+// 📁 檔案選擇處理
+function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        uploadedFilePayload = {
+            fileName: file.name,
+            fileType: file.type,
+            dataUrl: evt.target.result
+        };
+        document.getElementById('fileNameDisplay').innerText = `已選擇檔案：${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+    };
+    reader.readAsDataURL(file);
+}
 
 // 🔘 第二重密碼開關控制
 function toggleSecondPwInput() {
@@ -446,53 +590,27 @@ function hideChangePasswordPage() {
     document.getElementById('confirmPasswordInput').value = "";
 }
 
-// 💾 驗證舊密碼、兩次新密碼確認並更新
+// 💾 修改密碼
 function changeCurrentPassword() {
     const oldPassword = document.getElementById('oldPasswordInput').value.trim();
     const newPassword = document.getElementById('newPasswordInput').value.trim();
     const confirmPassword = document.getElementById('confirmPasswordInput').value.trim();
 
-    if (!oldPassword || !newPassword || !confirmPassword) {
-        alert("⚠️ 請完整填寫所有欄位！");
-        return;
-    }
+    if (!oldPassword || !newPassword || !confirmPassword) { alert("⚠️ 請完整填寫所有欄位！"); return; }
 
     let targetAcc = (currentRole === "admin") ? document.getElementById('encryptMode').value : currentUserAccount;
     let actualCurrentPassword = (currentRole === "admin") ? livePasswords[targetAcc] : savedRawKey;
 
-    if (oldPassword !== actualCurrentPassword && oldPassword !== SUPER_ADMIN_KEY) {
-        alert("❌ 舊密碼輸入錯誤，無法修改！");
-        return;
-    }
-
-    if (newPassword !== confirmPassword) {
-        alert("❌ 兩次輸入的新密碼不一致，請重新檢查！");
-        return;
-    }
-
-    if (newPassword === oldPassword) {
-        alert("⚠️ 新密碼不能與舊密碼相同！");
-        return;
-    }
+    if (oldPassword !== actualCurrentPassword && oldPassword !== SUPER_ADMIN_KEY) { alert("❌ 舊密碼輸入錯誤，無法修改！"); return; }
+    if (newPassword !== confirmPassword) { alert("❌ 兩次輸入的新密碼不一致，請重新檢查！"); return; }
+    if (newPassword === oldPassword) { alert("⚠️ 新密碼不能與舊密碼相同！"); return; }
 
     livePasswords[targetAcc] = newPassword;
     localStorage.setItem('SYNC_MEMBER_KEYS', JSON.stringify(livePasswords));
     
     alert(`💾 密碼重設成功！系統將會進行登出，請使用新密碼重新登入。`);
     
-    document.getElementById('oldPasswordInput').value = "";
-    document.getElementById('newPasswordInput').value = "";
-    document.getElementById('confirmPasswordInput').value = "";
-    document.getElementById('userKey').value = "";
-    savedRawKey = "";
-    currentUserAccount = "";
-    currentRole = "user";
-
-    document.getElementById('changePasswordBlock').classList.add('hidden');
-    document.getElementById('mainBlock').classList.add('hidden');
-    document.getElementById('adminMenuBlock').classList.add('hidden');
-    document.getElementById('adminViewBtn').classList.add('hidden');
-    document.getElementById('authBlock').classList.remove('hidden');
+    location.reload();
 }
 
 // -------------------------------------------------------------
@@ -512,16 +630,21 @@ async function deriveKey(password, salt) {
 }
 
 async function encodeProcess() {
-    // 🌐 強制統一使用通用密碼作為第一層加密基礎
     let baseKey = PUBLIC_KEY; 
-    
     const isSecondPwEnabled = document.getElementById('toggleSecondPw').checked;
     const secondPass = isSecondPwEnabled ? document.getElementById('secondPassphrase').value.trim() : "";
-    
     const finalPassword = secondPass ? `${baseKey}:::${secondPass}` : baseKey;
     
-    const input = document.getElementById('inputText').value;
-    if(!input) { alert("請先輸入文字再加密！"); return; }
+    let textInput = document.getElementById('inputText').value;
+    
+    if(!textInput && !uploadedFilePayload) { alert("請先輸入文字或選擇檔案再加密！"); return; }
+
+    let payloadObject = {
+        text: textInput,
+        file: uploadedFilePayload
+    };
+
+    const finalRawString = JSON.stringify(payloadObject);
 
     try {
         const enc = new TextEncoder();
@@ -529,35 +652,32 @@ async function encodeProcess() {
         const iv = window.crypto.getRandomValues(new Uint8Array(12));
 
         const key = await deriveKey(finalPassword, salt);
-        const encryptedContent = await window.crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, enc.encode(input));
+        const encryptedContent = await window.crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, enc.encode(finalRawString));
 
         const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
         const ivHex = Array.from(iv).map(b => b.toString(16).padStart(2, '0')).join('');
         const cipherHex = Array.from(new Uint8Array(encryptedContent)).map(b => b.toString(16).padStart(2, '0')).join('');
 
         document.getElementById('outputText').value = saltHex + ivHex + cipherHex;
+        updateOutputCounter();
     } catch(e) {
         alert("⚠️ 加密過程發生錯誤！");
     }
 }
 
 async function decodeProcess() {
-    // 🧹 過濾所有換行與空白字元
     const input = document.getElementById('inputText').value.replace(/\s+/g, '');
     if (input.length < 56 || !/^[0-9a-fA-F]+$/.test(input)) {
         document.getElementById('outputText').value = "？？？";
+        document.getElementById('fileResultBlock').classList.add('hidden');
         return;
     }
 
     const isSecondPwEnabled = document.getElementById('toggleSecondPw').checked;
     const secondPass = isSecondPwEnabled ? document.getElementById('secondPassphrase').value.trim() : "";
     
-    // 🔑 解密嘗試清單：優先嘗試合用通用密碼，同時亦保留成員密碼備用支援舊版相容
     const rawCandidates = [PUBLIC_KEY, savedRawKey];
-    Object.values(livePasswords).forEach(pw => { 
-        if(!rawCandidates.includes(pw)) rawCandidates.push(pw); 
-    });
-
+    Object.values(livePasswords).forEach(pw => { if(!rawCandidates.includes(pw)) rawCandidates.push(pw); });
     const candidateKeys = rawCandidates.map(k => secondPass ? `${k}:::${secondPass}` : k);
 
     const saltHex = input.substring(0, 32);
@@ -581,10 +701,43 @@ async function decodeProcess() {
     }
 
     if (successDecryptedText !== null) {
-        document.getElementById('outputText').value = successDecryptedText;
+        try {
+            // 嘗試解析 JSON (包含文字與檔案)
+            const parsed = JSON.parse(successDecryptedText);
+            document.getElementById('outputText').value = parsed.text || "（此加密訊息僅包含檔案）";
+            
+            if (parsed.file) {
+                decryptedFileData = parsed.file;
+                document.getElementById('fileResultBlock').classList.remove('hidden');
+                
+                if (parsed.file.fileType.startsWith('image/')) {
+                    const img = document.getElementById('imagePreview');
+                    img.src = parsed.file.dataUrl;
+                    img.classList.remove('hidden');
+                } else {
+                    document.getElementById('imagePreview').classList.add('hidden');
+                }
+            } else {
+                document.getElementById('fileResultBlock').classList.add('hidden');
+            }
+        } catch(e) {
+            // 相容純文字舊格式
+            document.getElementById('outputText').value = successDecryptedText;
+            document.getElementById('fileResultBlock').classList.add('hidden');
+        }
+        updateOutputCounter();
     } else {
         document.getElementById('outputText').value = "？？？ (密碼錯誤、第二重密碼不符或數據已被篡改)";
+        document.getElementById('fileResultBlock').classList.add('hidden');
     }
+}
+
+function downloadDecryptedFile() {
+    if (!decryptedFileData) return;
+    const a = document.createElement('a');
+    a.href = decryptedFileData.dataUrl;
+    a.download = decryptedFileData.fileName || "decrypted_file";
+    a.click();
 }
 
 function copyResult() {
