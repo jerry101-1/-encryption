@@ -14,8 +14,46 @@
             --sub-text: #7f8c8d;
             --border-color: #ccc;
             --box-bg: #f8f9fa;
+
+            /* 按鈕色彩變數 (淺色模式預設) */
+            --btn-encode-bg: #3498db;
+            --btn-encode-text: #ffffff;
+            --btn-encode-border: transparent;
+
+            --btn-decode-bg: #2ecc71;
+            --btn-decode-text: #ffffff;
+            --btn-decode-border: transparent;
+
+            --btn-copy-bg: #e67e22;
+            --btn-copy-text: #ffffff;
+            --btn-copy-border: transparent;
+
+            --btn-verify-bg: #16a085;
+            --btn-verify-text: #ffffff;
+            --btn-verify-border: transparent;
+
+            --btn-admin-bg: #e74c3c;
+            --btn-admin-text: #ffffff;
+            --btn-admin-border: transparent;
+
+            --btn-pw-bg: #34495e;
+            --btn-pw-text: #ffffff;
+            --btn-pw-border: transparent;
+
+            --btn-change-bg: #e74c3c;
+            --btn-change-text: #ffffff;
+            --btn-change-border: transparent;
+
+            --btn-cancel-bg: #7f8c8d;
+            --btn-cancel-text: #ffffff;
+            --btn-cancel-border: transparent;
+
+            --btn-download-bg: #9b59b6;
+            --btn-download-text: #ffffff;
+            --btn-download-border: transparent;
         }
 
+        /* 🌙 深色模式下的按鈕樣式設定：黑色背景 + 彩色外框 + 彩色文字 */
         [data-theme="dark"] {
             --bg-color: #1a1a1a;
             --card-bg: #2d2d2d;
@@ -23,6 +61,42 @@
             --sub-text: #aaaaaa;
             --border-color: #444444;
             --box-bg: #383838;
+
+            --btn-encode-bg: #202020;
+            --btn-encode-text: #3498db;
+            --btn-encode-border: #3498db;
+
+            --btn-decode-bg: #202020;
+            --btn-decode-text: #2ecc71;
+            --btn-decode-border: #2ecc71;
+
+            --btn-copy-bg: #202020;
+            --btn-copy-text: #e67e22;
+            --btn-copy-border: #e67e22;
+
+            --btn-verify-bg: #202020;
+            --btn-verify-text: #1abc9c;
+            --btn-verify-border: #1abc9c;
+
+            --btn-admin-bg: #202020;
+            --btn-admin-text: #e74c3c;
+            --btn-admin-border: #e74c3c;
+
+            --btn-pw-bg: #202020;
+            --btn-pw-text: #bdc3c7;
+            --btn-pw-border: #7f8c8d;
+
+            --btn-change-bg: #202020;
+            --btn-change-text: #e74c3c;
+            --btn-change-border: #e74c3c;
+
+            --btn-cancel-bg: #202020;
+            --btn-cancel-text: #95a5a6;
+            --btn-cancel-border: #7f8c8d;
+
+            --btn-download-bg: #202020;
+            --btn-download-text: #9b59b6;
+            --btn-download-border: #9b59b6;
         }
 
         body {
@@ -106,36 +180,103 @@
             margin-top: 4px;
         }
 
+        /* 通用按鈕樣式 */
         button {
             width: 100%;
             padding: 12px;
-            border: none;
-            border-radius: 4px;
-            color: white;
+            border-radius: 6px;
             font-size: 15px;
             cursor: pointer;
-            transition: background 0.2s;
+            box-sizing: border-box;
+            transition: all 0.2s ease-in-out;
         }
-        .btn-encode { background-color: #3498db; font-weight: bold; }
-        .btn-encode:hover { background-color: #2980b9; }
-        .btn-decode { background-color: #2ecc71; margin-top: 10px; font-weight: bold; }
-        .btn-decode:hover { background-color: #27ae60; }
-        .btn-copy { background-color: #e67e22; margin-top: 10px; }
-        .btn-copy:hover { background-color: #d35400; }
-        .btn-verify { background-color: #16a085; margin-top: 10px; }
-        .btn-verify:hover { background-color: #117864; }
-        .btn-admin-view { background-color: #e74c3c; margin-bottom: 15px; font-weight: bold;}
-        .btn-admin-view:hover { background-color: #c0392b; }
-        .btn-open-pw-page { background-color: #34495e; margin-top: 25px; }
-        .btn-open-pw-page:hover { background-color: #2c3e50; }
-        .btn-change-pw { background-color: #e74c3c; margin-top: 10px; font-weight: bold; }
-        .btn-change-pw:hover { background-color: #c0392b; }
-        .btn-cancel { background-color: #7f8c8d; margin-top: 8px; }
-        .btn-cancel:hover { background-color: #95a5a6; }
-        .btn-changelog { background-color: #7f8c8d; margin-top: 15px; font-size: 13px; padding: 8px; }
-        .btn-changelog:hover { background-color: #95a5a6; }
-        .btn-download { background-color: #9b59b6; margin-top: 10px; font-weight: bold; }
-        .btn-download:hover { background-color: #8e44ad; }
+
+        /* 按鈕風格套用 */
+        .btn-encode {
+            background-color: var(--btn-encode-bg);
+            color: var(--btn-encode-text);
+            border: 2px solid var(--btn-encode-border);
+            font-weight: bold;
+        }
+        .btn-encode:hover { opacity: 0.85; filter: brightness(1.2); }
+
+        .btn-decode {
+            background-color: var(--btn-decode-bg);
+            color: var(--btn-decode-text);
+            border: 2px solid var(--btn-decode-border);
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .btn-decode:hover { opacity: 0.85; filter: brightness(1.2); }
+
+        .btn-copy {
+            background-color: var(--btn-copy-bg);
+            color: var(--btn-copy-text);
+            border: 2px solid var(--btn-copy-border);
+            margin-top: 10px;
+        }
+        .btn-copy:hover { opacity: 0.85; filter: brightness(1.2); }
+
+        .btn-verify {
+            background-color: var(--btn-verify-bg);
+            color: var(--btn-verify-text);
+            border: 2px solid var(--btn-verify-border);
+            margin-top: 10px;
+        }
+        .btn-verify:hover { opacity: 0.85; filter: brightness(1.2); }
+
+        .btn-admin-view {
+            background-color: var(--btn-admin-bg);
+            color: var(--btn-admin-text);
+            border: 2px solid var(--btn-admin-border);
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .btn-admin-view:hover { opacity: 0.85; filter: brightness(1.2); }
+
+        .btn-open-pw-page {
+            background-color: var(--btn-pw-bg);
+            color: var(--btn-pw-text);
+            border: 2px solid var(--btn-pw-border);
+            margin-top: 25px;
+        }
+        .btn-open-pw-page:hover { opacity: 0.85; filter: brightness(1.2); }
+
+        .btn-change-pw {
+            background-color: var(--btn-change-bg);
+            color: var(--btn-change-text);
+            border: 2px solid var(--btn-change-border);
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .btn-change-pw:hover { opacity: 0.85; filter: brightness(1.2); }
+
+        .btn-cancel {
+            background-color: var(--btn-cancel-bg);
+            color: var(--btn-cancel-text);
+            border: 2px solid var(--btn-cancel-border);
+            margin-top: 8px;
+        }
+        .btn-cancel:hover { opacity: 0.85; filter: brightness(1.2); }
+
+        .btn-changelog {
+            background-color: var(--btn-cancel-bg);
+            color: var(--btn-cancel-text);
+            border: 2px solid var(--btn-cancel-border);
+            margin-top: 15px;
+            font-size: 13px;
+            padding: 8px;
+        }
+        .btn-changelog:hover { opacity: 0.85; filter: brightness(1.2); }
+
+        .btn-download {
+            background-color: var(--btn-download-bg);
+            color: var(--btn-download-text);
+            border: 2px solid var(--btn-download-border);
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .btn-download:hover { opacity: 0.85; filter: brightness(1.2); }
 
         .extra-pw-box {
             background-color: var(--box-bg);
@@ -321,7 +462,7 @@
             <div class="changelog-item">
                 <span class="changelog-version">🚀 v4.0.0 (全能大版本升級)</span> <span class="changelog-date">2026/07</span>
                 <ul>
-                    <li><b>🌓 深色/淺色模式：</b>新增主題切換按鈕，支援系統自動記憶閱讀偏好。</li>
+                    <li><b>🌓 深色/淺色模式：</b>新增主題切換按鈕，深色模式採用質感外框按鈕設計。</li>
                     <li><b>📊 字數與容量統計：</b>新增即時字數統計（含/不含空白）與密文容量大小提示。</li>
                     <li><b>📁 檔案與圖片加密：</b>支援上傳圖片/檔案進行加密，解密自動還原圖片預覽與下載。</li>
                 </ul>
@@ -702,7 +843,6 @@ async function decodeProcess() {
 
     if (successDecryptedText !== null) {
         try {
-            // 嘗試解析 JSON (包含文字與檔案)
             const parsed = JSON.parse(successDecryptedText);
             document.getElementById('outputText').value = parsed.text || "（此加密訊息僅包含檔案）";
             
@@ -721,7 +861,6 @@ async function decodeProcess() {
                 document.getElementById('fileResultBlock').classList.add('hidden');
             }
         } catch(e) {
-            // 相容純文字舊格式
             document.getElementById('outputText').value = successDecryptedText;
             document.getElementById('fileResultBlock').classList.add('hidden');
         }
