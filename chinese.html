@@ -240,6 +240,83 @@
             max-height: 250px;
             overflow-y: auto; /* 超出高度時顯示捲軸 */
         }
+        /* 三點選單按鈕 */
+        .btn-menu-dots {
+            background: transparent;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            color: inherit;
+            transition: all 0.2s;
+        }
+        .btn-menu-dots:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        /* 下拉選單浮動盒 */
+        .dropdown-menu-box {
+            position: absolute;
+            right: 0;
+            top: 35px;
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 8px;
+            width: 180px;
+            z-index: 999;
+            padding: 6px 0;
+            overflow: hidden;
+        }
+
+        /* 深色模式下的下拉選單 */
+        body.dark-mode .dropdown-menu-box {
+            background-color: #2a2a2a;
+            border-color: #444;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        /* 選單項目 */
+        .menu-item {
+            padding: 10px 16px;
+            font-size: 14px;
+            cursor: pointer;
+            color: #333;
+            transition: background 0.2s;
+            text-align: left;
+        }
+        body.dark-mode .menu-item {
+             color: #e0e0e0;
+        }
+        .menu-item:hover {
+            background-color: #f0f0f0;
+        }
+        body.dark-mode .menu-item:hover {
+            background-color: #383838;
+        }
+
+        /* 選單警告/登出項目 */
+        .menu-item.danger {
+            color: #d9534f;
+        }
+        .menu-item.danger:hover {
+            background-color: #fdf2f2;
+        }
+         body.dark-mode .menu-item.danger:hover {
+            background-color: #422525;
+        }
+
+        /* 分割線 */
+        .menu-item-divider {
+            height: 1px;
+            background-color: #eee;
+            margin: 4px 0;
+        }
+        body.dark-mode .menu-item-divider {
+            background-color: #444;
+        }
 
         /* 歷史紀錄單一卡片項目 */
         .history-item {
@@ -297,11 +374,6 @@
         </defs>
     </svg>
 
-    <div class="header-bar">
-        <div class="header-placeholder"></div>
-        <h2>📝 筆記本</h2>
-        <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeBtn">🌙 深色</button>
-    </div>
     <div id="syncStatus" class="status-tag">連線雲端資料庫中...</div>
 
     <div id="authBlock" class="form-group">
@@ -564,6 +636,27 @@ if(localStorage.getItem('APP_THEME') === 'dark') {
     document.getElementById('themeBtn').innerText = "☀️ 淺色";
 }
 
+
+// 切換三點選單顯示 / 隱藏
+function toggleDropdownMenu(e) {
+    if (e) e.stopPropagation();
+    const menu = document.getElementById('dropdownMenu');
+    menu.classList.toggle('hidden');
+}
+
+// 關閉三點選單
+function closeDropdownMenu() {
+    const menu = document.getElementById('dropdownMenu');
+    if (menu) menu.classList.add('hidden');
+}
+
+// 點擊頁面其他地方時，自動收合三點選單
+document.addEventListener('click', function(e) {
+    const wrapper = document.querySelector('.menu-dropdown-wrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+        closeDropdownMenu();
+    }
+});
 /* ---------------------------------------------------------
    📊 2. 字數與檔案容量計算 (Text Counters)
    --------------------------------------------------------- */
