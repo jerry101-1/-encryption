@@ -53,7 +53,7 @@
             --btn-download-border: transparent;
         }
 
-        /* 🌙 深色模式下的按鈕樣式設定：黑色背景 + 彩色外框 + 彩色文字 */
+        /* 🌙 深色模式下的按鈕樣式設定 */
         [data-theme="dark"] {
             --bg-color: #1a1a1a;
             --card-bg: #2d2d2d;
@@ -112,7 +112,6 @@
             transition: background-color 0.3s, color 0.3s;
         }
 
-        /* 頂部標題列：三欄 Flex 布局 */
         .header-bar {
             display: flex;
             justify-content: space-between;
@@ -121,7 +120,7 @@
         }
 
         .header-placeholder {
-            flex: 1; /* 動態與右邊按鈕平分區域，確保標題完美絕對居中 */
+            flex: 1;
             max-width: 90px;
         }
 
@@ -133,7 +132,7 @@
             border-radius: 20px;
             cursor: pointer;
             font-size: 14px;
-            white-space: nowrap; /* 強制不折行 */
+            white-space: nowrap;
             flex: 1;
             max-width: 90px;
             text-align: center;
@@ -152,6 +151,7 @@
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
         
+        /* 密碼輸入框與眼睛圖示樣式優化 */
         .password-wrapper {
             position: relative;
             display: flex;
@@ -167,16 +167,25 @@
             border-radius: 4px;
             font-size: 16px;
         }
+        
         .toggle-eye {
             position: absolute;
             right: 10px;
             cursor: pointer;
             user-select: none;
-            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             opacity: 0.6;
             transition: opacity 0.2s;
+            color: var(--text-color);
         }
         .toggle-eye:hover { opacity: 1.0; }
+        .toggle-eye svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
 
         input[type="text"], textarea, select {
             width: 100%;
@@ -197,7 +206,6 @@
             margin-top: 4px;
         }
 
-        /* 通用按鈕樣式 */
         button {
             width: 100%;
             padding: 12px;
@@ -208,7 +216,6 @@
             transition: all 0.2s ease-in-out;
         }
 
-        /* 按鈕風格套用 */
         .btn-encode {
             background-color: var(--btn-encode-bg);
             color: var(--btn-encode-text);
@@ -341,7 +348,6 @@
         .changelog-version { font-weight: bold; }
         .changelog-date { color: var(--sub-text); font-size: 12px; }
 
-        /* 檔案上傳區塊 */
         .file-upload-box {
             border: 2px dashed var(--border-color);
             border-radius: 6px;
@@ -363,8 +369,20 @@
 </head>
 <body>
 
+    <svg style="display: none;">
+        <defs>
+            <g id="icon-eye-open">
+                <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+            </g>
+            <g id="icon-eye-closed">
+                <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.44-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.17c0-1.66-1.34-3-3-3l-.17.02z"/>
+            </g>
+        </defs>
+    </svg>
+
     <div class="header-bar">
-        <div class="header-placeholder"></div> <h2>📝 筆記本</h2>
+        <div class="header-placeholder"></div>
+        <h2>📝 筆記本</h2>
         <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeBtn">🌙 深色</button>
     </div>
     <div id="syncStatus" class="status-tag">連線雲端資料庫中...</div>
@@ -373,7 +391,9 @@
         <label for="userKey">請輸入密碼以解鎖：</label>
         <div class="password-wrapper">
             <input type="password" id="userKey" placeholder="請先輸入個人存取密碼...">
-            <span class="toggle-eye" onclick="togglePasswordVisibility('userKey', this)">👁️</span>
+            <span class="toggle-eye" onclick="togglePasswordVisibility('userKey', this)">
+                <svg viewBox="0 0 24 24"><use href="#icon-eye-closed"></use></svg>
+            </span>
         </div>
         <button class="btn-verify" onclick="verifyPassword()">🔓 進入系統</button>
     </div>
@@ -386,7 +406,9 @@
             <label for="oldPasswordInput">請輸入當前舊密碼：</label>
             <div class="password-wrapper">
                 <input type="password" id="oldPasswordInput" placeholder="輸入舊存取密碼...">
-                <span class="toggle-eye" onclick="togglePasswordVisibility('oldPasswordInput', this)">👁️</span>
+                <span class="toggle-eye" onclick="togglePasswordVisibility('oldPasswordInput', this)">
+                    <svg viewBox="0 0 24 24"><use href="#icon-eye-closed"></use></svg>
+                </span>
             </div>
         </div>
 
@@ -394,7 +416,9 @@
             <label for="newPasswordInput">請輸入新密碼：</label>
             <div class="password-wrapper">
                 <input type="password" id="newPasswordInput" placeholder="輸入新的存取密碼...">
-                <span class="toggle-eye" onclick="togglePasswordVisibility('newPasswordInput', this)">👁️</span>
+                <span class="toggle-eye" onclick="togglePasswordVisibility('newPasswordInput', this)">
+                    <svg viewBox="0 0 24 24"><use href="#icon-eye-closed"></use></svg>
+                </span>
             </div>
         </div>
 
@@ -402,7 +426,9 @@
             <label for="confirmPasswordInput">再次確認新密碼：</label>
             <div class="password-wrapper">
                 <input type="password" id="confirmPasswordInput" placeholder="再次輸入新密碼...">
-                <span class="toggle-eye" onclick="togglePasswordVisibility('confirmPasswordInput', this)">👁️</span>
+                <span class="toggle-eye" onclick="togglePasswordVisibility('confirmPasswordInput', this)">
+                    <svg viewBox="0 0 24 24"><use href="#icon-eye-closed"></use></svg>
+                </span>
             </div>
         </div>
         
@@ -444,13 +470,15 @@
         <div class="extra-pw-box">
             <label class="switch-container">
                 <input type="checkbox" id="toggleSecondPw" onchange="toggleSecondPwInput()">
-                🔒 開啟第二重自訂密碼（雙重加密防護）
+                🔒 開開啟第二重自訂密碼（雙重加密防護）
             </label>
 
             <div id="secondPwWrapper" class="hidden" style="margin-top: 10px;">
                 <div class="password-wrapper">
                     <input type="password" id="secondPassphrase" placeholder="加密時設定此欄，解密也必須輸入相同密碼...">
-                    <span class="toggle-eye" onclick="togglePasswordVisibility('secondPassphrase', this)">👁️</span>
+                    <span class="toggle-eye" onclick="togglePasswordVisibility('secondPassphrase', this)">
+                        <svg viewBox="0 0 24 24"><use href="#icon-eye-closed"></use></svg>
+                    </span>
                 </div>
             </div>
         </div>
@@ -512,7 +540,7 @@
             <div class="changelog-item">
                 <span class="changelog-version">🔒 v3.4.0 (安全性與體驗提升)</span> <span class="changelog-date">2026/07</span>
                 <ul>
-                    <li><b>👁️ 密碼可視化：</b>全系統密碼欄位新增「眼睛」切換按鈕，可隨時檢視輸入內容。</li>
+                    <li><b>👁️ 密碼可視化：</b>全面換成向量 SVG 眼睛圖示，可隨時檢視輸入內容。</li>
                     <li><b>🛡️ 完整驗證流：</b>改密需要「輸入舊密碼」+「新密碼二次確認」，強化帳戶防護。</li>
                 </ul>
             </div>
@@ -662,15 +690,15 @@ function toggleSecondPwInput() {
     }
 }
 
-// 👁️ 切換密碼顯示/隱藏
+// 👁️ SVG 密碼顯示/隱藏切換函數
 function togglePasswordVisibility(inputId, eyeIcon) {
     const inputEl = document.getElementById(inputId);
     if (inputEl.type === "password") {
         inputEl.type = "text";
-        eyeIcon.innerText = "🙈";
+        eyeIcon.innerHTML = '<svg viewBox="0 0 24 24"><use href="#icon-eye-open"></use></svg>';
     } else {
         inputEl.type = "password";
-        eyeIcon.innerText = "👁️";
+        eyeIcon.innerHTML = '<svg viewBox="0 0 24 24"><use href="#icon-eye-closed"></use></svg>';
     }
 }
 
@@ -734,7 +762,6 @@ function showAllPasswords() {
     alert(msg);
 }
 
-// 🔄 頁面切換控制
 function showChangePasswordPage() {
     document.getElementById('mainBlock').classList.add('hidden');
     document.getElementById('changePasswordBlock').classList.remove('hidden');
@@ -748,7 +775,6 @@ function hideChangePasswordPage() {
     document.getElementById('confirmPasswordInput').value = "";
 }
 
-// 💾 修改密碼
 function changeCurrentPassword() {
     const oldPassword = document.getElementById('oldPasswordInput').value.trim();
     const newPassword = document.getElementById('newPasswordInput').value.trim();
@@ -770,10 +796,6 @@ function changeCurrentPassword() {
     
     location.reload();
 }
-
-// -------------------------------------------------------------
-// 🔐 加解密核心演算法
-// -------------------------------------------------------------
 
 async function deriveKey(password, salt) {
     const enc = new TextEncoder();
