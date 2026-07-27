@@ -421,12 +421,6 @@
             <button class="btn-clear" onclick="clearAllContent()">🧹 銷毀清空</button>
         </div>
 
-        <div class="btn-grid" style="margin-top: 15px;">
-            <button class="btn-backup" onclick="exportBackupData()">📤 導出筆記JSON</button>
-            <button class="btn-backup" onclick="document.getElementById('importFileInput').click()">📥 匯入筆記JSON</button>
-            <input type="file" id="importFileInput" class="hidden" accept=".json" onchange="importBackupData(event)">
-        </div>
-
         <div class="history-box">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <strong>🕒 快速暫存區 / 歷史紀錄</strong>
@@ -435,38 +429,82 @@
             <div id="historyListContainer">無歷史紀錄</div>
         </div>
 
-        <button class="btn-open-pw-page" onclick="showChangePasswordPage()">⚙️ 修改個人密碼</button>
-
-        <button class="btn-changelog" onclick="toggleChangelog()">📜 檢視系統更新日誌 (Changelog)</button>
         <div id="changelogBox" class="changelog-box hidden">
             <div class="changelog-item">
-                <span class="changelog-version">⚡ v5.0.0 (工作台安全與備份大升級)</span> <span class="changelog-date">2026/07</span>
+                <span class="changelog-version">⚡ v5.1.0 (UI 介面收納與功能選單升級)</span> 
+                <span class="changelog-date">2026/07</span>
                 <ul>
-                    <li><b>🧹 銷毀清空按鈕：</b>一鍵清空輸入、輸出、附件預覽，快速銷毀防窺探。</li>
-                    <li><b>🕒 歷史暫存區：</b>自動保存最近加密/解密紀錄，方便隨時還原與檢視。</li>
-                    <li><b>📦 導出/匯入 JSON：</b>支援整份歷史筆記資料匯出為 .json 備份檔與跨裝置匯入。</li>
+                    <li><b>⋮ 右上角下拉選單：</b>整合 JSON 匯入/導出、修改密碼、更新日誌，讓主畫面更簡潔清爽。</li>
+                    <li><b>🔒 快速登出鎖定：</b>於選單新增一鍵登出，清除記憶體金鑰並退回解鎖畫面。</li>
+                    <li><b>🎨 頂部列排版優化：</b>主題切換與選單按鈕齊右對齊，標題保持置中平衡。</li>
                 </ul>
             </div>
+
             <div class="changelog-item">
-                <span class="changelog-version">🚀 v4.0.0 (全能大版本升級)</span> <span class="changelog-date">2026/07</span>
+                <span class="changelog-version">⚡ v5.0.0 (工作台安全與備份大升級)</span> 
+                <span class="changelog-date">2026/07</span>
                 <ul>
-                    <li><b>🌓 深色/淺色模式：</b>新增主題切換按鈕，深色模式採用質感外框按鈕設計。</li>
-                    <li><b>📊 字數與容量統計：</b>新增即時字數統計（含/不含空白）與密文容量大小提示。</li>
-                    <li><b>📁 檔案與圖片加密：</b>支援上傳圖片/檔案進行加密，解密自動還原圖片預覽與下載。</li>
+                    <li><b>🧹 一鍵銷毀清空：</b>新增銷毀按鈕，一鍵重置輸入框、輸出密文、雙重密碼與解密附件預覽。</li>
+                    <li><b>🕒 本地歷史暫存區：</b>自動記錄最近 20 筆加解密操作，支援單筆載入與刪除。</li>
+                    <li><b>📦 JSON 備份與匯入：</b>支援將歷史紀錄完整匯出為 .json 備份檔並跨裝置匯入還原。</li>
+                </ul>
+            </div>
+
+            <div class="changelog-item">
+                <span class="changelog-version">🚀 v4.0.0 (全能大版本升級)</span> 
+                <span class="changelog-date">2026/07</span>
+                <ul>
+                    <li><b>🌓 深色/淺色主題模式：</b>新增主題切換功能，深色模式採用質感暗色背景與彩色外框按鈕。</li>
+                    <li><b>📊 字數與容量統計：</b>輸入框新增即時字數統計，輸出框顯示真實 Bytes 與 KB 容量。</li>
+                    <li><b>📁 檔案與圖片加密：</b>支援上傳圖片/任意檔案轉 Base64 加密，解密自動還原圖片預覽與下載。</li>
+                </ul>
+            </div>
+
+            <div class="changelog-item">
+                <span class="changelog-version">🔐 v3.0.0 (加密核心與第二重防護升級)</span> 
+                <span class="changelog-date">2026/05</span>
+                <ul>
+                    <li><b>🔒 雙重加密防護 (Second Passphrase)：</b>使用者可自主啟用第二重自訂密碼，達成端到端防護。</li>
+                    <li><b>🛡️ Web Crypto API 整合：</b>採用 AES-256-GCM 配合 PBKDF2 (100,000 次疊加) 高強度演算法。</li>
+                    <li><b>⚡ 自動貼上解密：</b>監聽剪貼簿貼上事件，符合 16 進位密文特徵自動執行解密。</li>
+                </ul>
+            </div>
+
+            <div class="changelog-item">
+                <span class="changelog-version">👥 v2.0.0 (多成員帳號與管理員權限)</span> 
+                <span class="changelog-date">2026/02</span>
+                <ul>
+                    <li><b>🔑 多成員獨立密碼驗證：</b>新增多組成員專屬金鑰，區分不同成員權限與存取狀態。</li>
+                    <li><b>👑 超級管理員控制台：</b>新增超級管理員身份，可查看全體成員金鑰列表並切換代理加密。</li>
+                    <li><b>👁️ 密碼顯示/隱藏切換：</b>輸入框支援點擊眼睛圖示切換明文/密文顯示。</li>
+                </ul>
+            </div>
+
+            <div class="changelog-item">
+                <span class="changelog-version">🌱 v1.0.0 (基礎加密筆記本誕生)</span> 
+                <span class="changelog-date">2025/11</span>
+                <ul>
+                    <li><b>📝 基礎文字加解密：</b>建立純文字輸入框與輸出框，支援基礎訊息字串加密與解密。</li>
+                    <li><b>📋 一鍵複製功能：</b>點擊按鈕即可快速將加密結果複製至剪貼簿。</li>
+                    <li><b>📱 響應式介面設計：</b>建立基礎卡片式 UI 佈局，適應桌機與手機螢幕顯示。</li>
                 </ul>
             </div>
         </div>
 
-    </div>
-
 <script>
+/* ---------------------------------------------------------
+   📜 切換顯示/隱藏更新日誌框的 JS 函數
+   --------------------------------------------------------- */
+function toggleChangelog() {
+    const changelogBox = document.getElementById('changelogBox');
+    changelogBox.classList.toggle('hidden');
+}
+
 /* ---------------------------------------------------------
    🛡️ 防窺探與開發者工具限制 (Anti-F12 Protection)
    --------------------------------------------------------- */
-// 停用右鍵選單
 document.addEventListener('contextmenu', e => e.preventDefault());
 
-// 監聽鍵盤事件，阻擋 F12、Ctrl+Shift+I、Ctrl+Shift+J、Ctrl+U 等開啟源碼的操作
 document.addEventListener('keydown', function(e) {
     if (e.key === "F12" || 
         ((e.ctrlKey || e.metaKey) && e.shiftKey && ['i','j'].includes(e.key.toLowerCase())) ||
@@ -475,6 +513,7 @@ document.addEventListener('keydown', function(e) {
         return false;
     }
 });
+</script>
 
 /* ---------------------------------------------------------
    🔐 系統金鑰與預設變數 (System Secrets & Variables)
