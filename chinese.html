@@ -508,8 +508,9 @@
             <div id="historyListContainer">無歷史紀錄</div>
         </div>
 
-    </div> <div id="changelogModal" class="modal-overlay hidden" onclick="if(event.target === this) toggleChangelog();">
+        <div id="changelogModal" class="modal-overlay hidden" onclick="if(event.target === this) toggleChangelog();">
         <div class="changelog-modal-box">
+            
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 style="margin: 0;">📜 系統更新日誌</h3>
                 <button onclick="toggleChangelog()" class="btn-clear btn-sm" style="width: auto; margin: 0;">✕ 關閉</button>
@@ -573,12 +574,16 @@
                     <li><b>📱 響應式介面設計：</b>建立基礎卡片式 UI 佈局，適應桌機與手機螢幕顯示。</li>
                 </ul>
             </div>
-        </div>
-    </div>
-            
-            <button class="btn-cancel" onclick="toggleChangelog()">關閉日誌</button>
-        </div>
-    </div>
+
+            <button class="btn-cancel" onclick="toggleChangelog()" style="margin-top: 15px;">關閉日誌</button>
+
+        </div> </div> ```
+
+---
+
+### 💡 修正重點說明：
+1. **收納於 Modal 彈窗內**：將原本落在外部的 `<button class="btn-cancel"...>` 放回了 `.changelog-modal-box` 裡面，這樣關閉按鈕才會正常顯示在彈窗的最底部。
+2. **標籤成對對齊**：修正了多餘的 `</div>`，確保最外層的透明黑遮罩 `#changelogModal` 能正確包裹整個內容卡片。
 
     <script>
         /* ---------------------------------------------------------
