@@ -693,7 +693,7 @@
                 currentRole = 'admin';
                 currentAccount = 'admin';
                 currentDerivePassword = PUBLIC_KEY;
-                alert("👑 最高管理員驗證成功！已解鎖管理權限。");
+                alert("👑驗證成功！");
                 showWorkspace();
                 document.getElementById('adminViewBtn').classList.remove('hidden');
                 document.getElementById('adminMenuBlock').classList.remove('hidden');
@@ -710,7 +710,7 @@
                     currentRole = 'user';
                     currentAccount = foundAcc;
                     currentDerivePassword = PUBLIC_KEY;
-                    alert("🔓 驗證成功，歡迎進入工作台！");
+                    alert("🔓 驗證成功");
                     showWorkspace();
                 } else {
                     alert("❌ 密碼錯誤，存取被拒！");
