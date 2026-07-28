@@ -1154,6 +1154,60 @@
         function escapeHtml(str) {
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
+        /* =========================================================
+       防護機制：阻擋 F12、右鍵選單與開發者工具檢視
+       ========================================================= */
+
+        // 1. 禁用右鍵選單 (防止點擊右鍵選單中的「檢視原始碼」或「檢查」)
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // 2. 阻擋常見開啟 DevTools 的快捷鍵組合
+        document.addEventListener('keydown', function(e) {
+         // F12
+        if (e.key === 'F12' || e.keyCode === 123) {
+            e.preventDefault();
+            return false;
+        }
+    
+        // Ctrl+Shift+I (Chrome/Firefox/Edge 檢查)
+        // Ctrl+Shift+J (主控台 Console)
+        // Ctrl+Shift+C (選取元素)
+        // Ctrl+Shift+K (Firefox 主控台)
+        if (e.ctrlKey && e.shiftKey && (['I', 'J', 'C', 'K'].includes(e.key.toUpperCase()))) {
+            e.preventDefault();
+            return false;
+        }
+
+        // Ctrl+U / Cmd+Option+U (檢視網頁原始碼)
+        if ((e.ctrlKey || e.metaKey) && e.key.toUpperCase() === 'U') {
+            e.preventDefault();
+            return false;
+        }
+
+        // Mac 專用快捷鍵：Cmd+Option+I / Cmd+Option+J / Cmd+Option+C
+        if (e.metaKey && e.altKey && (['I', 'J', 'C'].includes(e.key.toUpperCase()))) {
+            e.preventDefault();
+            return false;
+        }
+        });
+
+        // 3. 無限 Debugger 陷阱 (當有人強行打開 F12 時，會陷入無窮斷點停住執行)
+        (function() {
+        function blockDevTools() {
+            setInterval(function() {
+                (function() {
+                    return false;
+                })
+                ['constructor']('debugger')
+                ();
+            }, 100);
+        }
+        try {
+            blockDevTools();
+        } catch (err) {}
+        })();
     </script>
 </body>
 </html>
