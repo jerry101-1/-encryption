@@ -577,13 +577,7 @@
 
             <button class="btn-cancel" onclick="toggleChangelog()" style="margin-top: 15px;">關閉日誌</button>
 
-        </div> </div> ```
-
----
-
-### 💡 修正重點說明：
-1. **收納於 Modal 彈窗內**：將原本落在外部的 `<button class="btn-cancel"...>` 放回了 `.changelog-modal-box` 裡面，這樣關閉按鈕才會正常顯示在彈窗的最底部。
-2. **標籤成對對齊**：修正了多餘的 `</div>`，確保最外層的透明黑遮罩 `#changelogModal` 能正確包裹整個內容卡片。
+        </div> 
 
     <script>
         /* ---------------------------------------------------------
