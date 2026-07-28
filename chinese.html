@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>加密筆記本</title>
+    <title>筆記本</title>
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/16524/16524311.png" type="image/png">
 
     <style>
@@ -359,7 +359,7 @@
     </svg>
 
     <div class="header-bar" style="position: relative;">
-        <h2>📝 加密筆記本</h2>
+        <h2>📝 筆記本</h2>
 
         <div style="display: flex; align-items: center; gap: 8px; position: absolute; right: 0;">
             <button class="theme-toggle-btn" id="themeBtn" onclick="toggleTheme()">🌙 深色</button>
@@ -367,13 +367,13 @@
             <div id="menuContainer" style="position: relative;" class="hidden">
                 <button class="btn-menu-dots" onclick="toggleDropdownMenu(event)">⋮</button>
                 <div id="dropdownMenu" class="dropdown-menu-box hidden">
-                    <div class="menu-item" onclick="exportBackupData(); closeDropdownMenu();">📤 導出筆記 JSON</div>
-                    <div class="menu-item" onclick="document.getElementById('importFileInput').click(); closeDropdownMenu();">📥 匯入筆記 JSON</div>
+                    <div class="menu-item" onclick="exportBackupData(); closeDropdownMenu();">📤 導出筆記</div>
+                    <div class="menu-item" onclick="document.getElementById('importFileInput').click(); closeDropdownMenu();">📥 匯入筆記</div>
                     <div class="menu-item-divider"></div>
-                    <div class="menu-item" onclick="showChangePasswordPage(); closeDropdownMenu();">⚙️ 修改個人密碼</div>
-                    <div class="menu-item" onclick="toggleChangelog(); closeDropdownMenu();">📜 系統更新日誌</div>
+                    <div class="menu-item" onclick="showChangePasswordPage(); closeDropdownMenu();">⚙️ 修改密碼</div>
+                    <div class="menu-item" onclick="toggleChangelog(); closeDropdownMenu();">📜 更新日誌</div>
                     <div class="menu-item-divider"></div>
-                    <div class="menu-item danger" onclick="logoutSystem(); closeDropdownMenu();">🔒 一鍵登出鎖定</div>
+                    <div class="menu-item danger" onclick="logoutSystem(); closeDropdownMenu();">🔒 登出鎖定</div>
                 </div>
             </div>
         </div>
@@ -502,7 +502,7 @@
 
         <div class="history-box">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <strong>🕒 快速暫存區 / 歷史紀錄</strong>
+                <strong>🕒 歷史紀錄</strong>
                 <button class="btn-clear btn-sm" onclick="clearHistoryList()" style="width: auto;">清空紀錄</button>
             </div>
             <div id="historyListContainer">無歷史紀錄</div>
@@ -547,7 +547,7 @@
 
             <div class="changelog-item">
                 <span class="changelog-version">🔐 v3.0.0 (加密核心與第二重防護升級)</span>
-                <span class="changelog-date">2026/05</span>
+                <span class="changelog-date">2026/07</span>
                 <ul>
                     <li><b>🔒 雙重加密防護 (Second Passphrase)：</b>使用者可自主啟用第二重自訂密碼，達成端到端防護。</li>
                     <li><b>🛡️ Web Crypto API 整合：</b>採用 AES-256-GCM 配合 PBKDF2 (100,000 次疊加) 高強度演算法。</li>
@@ -556,13 +556,25 @@
             </div>
 
             <div class="changelog-item">
-                <span class="changelog-version">👥 v2.0.0 (多成員帳號與管理員權限)</span>
-                <span class="changelog-date">2026/03</span>
+                <span class="changelog-version">👥 v2.0.0</span> 
+                <span class="changelog-date">2026/07</span>
                 <ul>
-                    <li><b>👤 多成員獨立金鑰：</b>系統支援預設 8 組成員專屬金鑰密碼。</li>
-                    <li><b>👑 超級管理員檢視模式：</b>輸入管理員密碼可隨時查閱與切換成員金鑰。</li>
+                    <li><b>🔑 多成員獨立密碼驗證：</b>新增多組成員專屬金鑰，區分不同成員權限與存取狀態。</li>
+                    <li><b>👁️ 密碼顯示/隱藏切換：</b>輸入框支援點擊眼睛圖示切換明文/密文顯示。</li>
                 </ul>
             </div>
+
+            <div class="changelog-item">
+                <span class="changelog-version">🌱 v1.0.0 (基礎加密筆記本誕生)</span> 
+                <span class="changelog-date">2026/06</span>
+                <ul>
+                    <li><b>📝 基礎文字加解密：</b>建立純文字輸入框與輸出框，支援基礎訊息字串加密與解密。</li>
+                    <li><b>📋 一鍵複製功能：</b>點擊按鈕即可快速將加密結果複製至剪貼簿。</li>
+                    <li><b>📱 響應式介面設計：</b>建立基礎卡片式 UI 佈局，適應桌機與手機螢幕顯示。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
             
             <button class="btn-cancel" onclick="toggleChangelog()">關閉日誌</button>
         </div>
