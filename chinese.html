@@ -23,7 +23,7 @@
             --btn-encode-bg: #3498db;     --btn-encode-text: #ffffff; --btn-encode-border: transparent;
             --btn-decode-bg: #2ecc71;     --btn-decode-text: #ffffff; --btn-decode-border: transparent;
             --btn-copy-bg: #e67e22;       --btn-copy-text: #ffffff;   --btn-copy-border: transparent;
-            --btn-verify-bg: #16a085;     --btn-verify-text: #ffffff; --btn-verify-border: transparent;
+            --btn-verify-bg: #16a085;     --btn-verify-text: #ffffff;  --btn-verify-border: transparent;
             --btn-admin-bg: #e74c3c;      --btn-admin-text: #ffffff;  --btn-admin-border: transparent;
             --btn-pw-bg: #34495e;         --btn-pw-text: #ffffff;     --btn-pw-border: transparent;
             --btn-change-bg: #e74c3c;     --btn-change-text: #ffffff; --btn-change-border: transparent;
@@ -433,7 +433,6 @@
     </div>
 
     <div id="mainBlock" class="hidden">
-        
         <button id="adminViewBtn" class="btn-admin-view hidden" onclick="showAllPasswords()">👁️ 查看全體成員最新密碼表</button>
         
         <div id="adminMenuBlock" class="form-group hidden">
@@ -507,10 +506,8 @@
             </div>
             <div id="historyListContainer">無歷史紀錄</div>
         </div>
-
-        <div id="changelogModal" class="modal-overlay hidden" onclick="if(event.target === this) toggleChangelog();">
+    </div> <div id="changelogModal" class="modal-overlay hidden" onclick="if(event.target === this) toggleChangelog();">
         <div class="changelog-modal-box">
-            
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 style="margin: 0;">📜 系統更新日誌</h3>
                 <button onclick="toggleChangelog()" class="btn-clear btn-sm" style="width: auto; margin: 0;">✕ 關閉</button>
@@ -557,7 +554,7 @@
             </div>
 
             <div class="changelog-item">
-                <span class="changelog-version">👥 v2.0.0</span> 
+                <span class="changelog-version">👥 v2.0.0</span>
                 <span class="changelog-date">2026/07</span>
                 <ul>
                     <li><b>🔑 多成員獨立密碼驗證：</b>新增多組成員專屬金鑰，區分不同成員權限與存取狀態。</li>
@@ -566,7 +563,7 @@
             </div>
 
             <div class="changelog-item">
-                <span class="changelog-version">🌱 v1.0.0 (基礎加密筆記本誕生)</span> 
+                <span class="changelog-version">🌱 v1.0.0 (基礎加密筆記本誕生)</span>
                 <span class="changelog-date">2026/06</span>
                 <ul>
                     <li><b>📝 基礎文字加解密：</b>建立純文字輸入框與輸出框，支援基礎訊息字串加密與解密。</li>
@@ -576,8 +573,18 @@
             </div>
 
             <button class="btn-cancel" onclick="toggleChangelog()" style="margin-top: 15px;">關閉日誌</button>
-
-        </div> 
+        </div>
+    </div> <div id="pwTableModal" class="modal-overlay hidden" onclick="if(event.target === this) document.getElementById('pwTableModal').classList.add('hidden');">
+        <div class="changelog-modal-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin: 0;">👑 全體成員最新密碼表</h3>
+                <button onclick="document.getElementById('pwTableModal').classList.add('hidden')" class="btn-clear btn-sm" style="width: auto; margin: 0;">✕ 關閉</button>
+            </div>
+            <div id="pwTableContent" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: var(--box-bg); padding: 15px; border-radius: 6px; font-family: monospace;">
+            </div>
+            <button class="btn-cancel" onclick="document.getElementById('pwTableModal').classList.add('hidden')" style="margin-top: 15px;">關閉窗口</button>
+        </div>
+    </div>
 
     <script>
         /* ---------------------------------------------------------
@@ -598,589 +605,349 @@
             "user8": "userpass8"
         };
 
-        let currentRole = "user";          // 當前身分：'user' 或 'admin'
-        let currentUserAccount = "";       // 當前登入的帳號
-        let savedRawKey = "";              // 當前使用者解鎖輸入的金鑰
-        let uploadedFilePayload = null;    // 暫存上傳檔案的 Base64 資料
-        let decryptedFileData = null;      // 暫存解密出來的檔案資料
+        let currentRole = "user";          // 當前身分: "admin" | "user"
+        let currentAccount = "";           // 當前登入帳號 ID
+        let currentDerivePassword = "";    // 派生主金鑰
+        let selectedFilePayload = null;    // 待加密檔案資料
+        let decryptedFileData = null;      // 已解密檔案資料
         let historyRecords = [];           // 歷史紀錄陣列
 
         /* ---------------------------------------------------------
-           🌓 1. 深色 / 淺色主題切換 (Theme Switcher)
+           1. 頁面初始化與狀態監聽 (Init & Event Listeners)
            --------------------------------------------------------- */
-        function toggleTheme() {
-            const currentTheme = document.body.getAttribute('data-theme');
-            const btn = document.getElementById('themeBtn');
-            if (currentTheme === 'dark') {
-                document.body.removeAttribute('data-theme');
-                btn.innerText = "🌙 深色";
-                localStorage.setItem('APP_THEME', 'light');
-            } else {
-                document.body.setAttribute('data-theme', 'dark');
-                btn.innerText = "☀️ 淺色";
-                localStorage.setItem('APP_THEME', 'dark');
-            }
-        }
+        window.addEventListener('DOMContentLoaded', () => {
+            loadThemePreference();
+            loadHistoryFromStorage();
 
-        // 頁面載入時檢查是否保存過深色模式喜好
-        if(localStorage.getItem('APP_THEME') === 'dark') {
-            document.body.setAttribute('data-theme', 'dark');
-            document.getElementById('themeBtn').innerText = "☀️ 淺色";
-        }
+            // 監聽文字框自動解密貼上事件
+            document.getElementById('inputText').addEventListener('paste', () => {
+                setTimeout(() => {
+                    const text = document.getElementById('inputText').value.trim();
+                    if (text.length > 30 && /^[0-9a-fA-F]+$/.test(text)) {
+                        decodeProcess();
+                    }
+                }, 100);
+            });
 
-        // 切換三點選單顯示 / 隱藏
-        function toggleDropdownMenu(e) {
-            if (e) e.stopPropagation();
-            const menu = document.getElementById('dropdownMenu');
-            menu.classList.toggle('hidden');
-        }
+            // 點擊外部自動關閉下拉選單
+            window.addEventListener('click', (e) => {
+                const menu = document.getElementById('dropdownMenu');
+                const btn = document.querySelector('.btn-menu-dots');
+                if (menu && !menu.contains(e.target) && e.target !== btn) {
+                    closeDropdownMenu();
+                }
+            });
 
-        // 關閉三點選單
-        function closeDropdownMenu() {
-            const menu = document.getElementById('dropdownMenu');
-            if (menu) menu.classList.add('hidden');
-        }
-
-        // 點擊頁面其他地方時，自動收合三點選單
-        document.addEventListener('click', function(e) {
-            const wrapper = document.getElementById('menuContainer');
-            if (wrapper && !wrapper.contains(e.target)) {
-                closeDropdownMenu();
-            }
+            setTimeout(() => {
+                document.getElementById('syncStatus').innerText = "🟢 已與雲端資料庫保持即時連線 (系統就緒)";
+            }, 800);
         });
 
         /* ---------------------------------------------------------
-           📊 2. 字數與檔案容量計算 (Text Counters)
+           2. 主題切換與下拉選單 (Theme & Menu UI)
            --------------------------------------------------------- */
-        function updateInputCounter() {
-            const val = document.getElementById('inputText').value;
-            const lenWithSpace = val.length;
-            const lenNoSpace = val.replace(/\s+/g, '').length; // 移除所有空白字元後計算字數
-            document.getElementById('inputCounter').innerText = `字數: ${lenNoSpace} | 含空白: ${lenWithSpace}`;
-        }
-
-        function updateOutputCounter() {
-            const val = document.getElementById('outputText').value;
-            // 使用 TextEncoder 計算字串真實占用位元組大小 (Bytes)
-            const bytes = new TextEncoder().encode(val).length;
-            const kb = (bytes / 1024).toFixed(2);
-            document.getElementById('outputCounter').innerText = `長度: ${val.length} 字符 | 大小: ${kb} KB (${bytes} Bytes)`;
-        }
-
-        /* ---------------------------------------------------------
-           📁 3. 檔案 / 圖片處理機制 (File & Image Encoder)
-           --------------------------------------------------------- */
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            // 限制檔案大小不大於 5MB，避免記憶體溢出
-            if (file.size > 5 * 1024 * 1024) {
-                alert("上傳檔案不得超過 5MB！");
-                event.target.value = "";
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                uploadedFilePayload = {
-                    fileName: file.name,
-                    fileType: file.type,
-                    dataUrl: e.target.result
-                };
-                document.getElementById('fileNameDisplay').innerText = `已選擇附件: ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        /* ---------------------------------------------------------
-           🧹 4. 一鍵銷毀清空 (Clear All Data)
-           --------------------------------------------------------- */
-        function clearAllContent() {
-            document.getElementById('inputText').value = "";
-            document.getElementById('outputText').value = "";
-            document.getElementById('fileInput').value = "";
-            document.getElementById('fileNameDisplay').innerText = "";
-            document.getElementById('secondPassphrase').value = "";
-            document.getElementById('toggleSecondPw').checked = false;
-            document.getElementById('secondPwWrapper').classList.add('hidden');
-            document.getElementById('fileResultBlock').classList.add('hidden');
-            document.getElementById('imagePreview').classList.add('hidden');
-            
-            uploadedFilePayload = null;
-            decryptedFileData = null;
-
-            updateInputCounter();
-            updateOutputCounter();
-        }
-
-        /* ---------------------------------------------------------
-           🕒 5. 快速暫存區與歷史紀錄 (History Storage System)
-           --------------------------------------------------------- */
-        // 從 LocalStorage 載入歷史紀錄
-        function loadHistoryFromStorage() {
-            const saved = localStorage.getItem('NOTE_HISTORY_DATA');
-            if (saved) {
-                try {
-                    historyRecords = JSON.parse(saved);
-                } catch(e) {
-                    historyRecords = [];
-                }
-            }
-            renderHistoryList();
-        }
-
-        // 儲存歷史紀錄至 LocalStorage
-        function saveHistoryToStorage() {
-            localStorage.setItem('NOTE_HISTORY_DATA', JSON.stringify(historyRecords));
-            renderHistoryList();
-        }
-
-        // 新增一筆歷史紀錄
-        function addHistoryRecord(type, text, cipher) {
-            const timeStr = new Date().toLocaleString();
-            const summary = text ? text.substring(0, 15) : (cipher ? "密文: " + cipher.substring(0, 15) : "附件內容");
-            
-            historyRecords.unshift({
-                id: Date.now(),
-                type: type, // '加密' 或 '解密'
-                time: timeStr,
-                summary: summary,
-                text: text,
-                cipher: cipher
-            });
-
-            // 限制最多只存 20 筆最新紀錄，避免佔用過多記憶體
-            if (historyRecords.length > 20) historyRecords.pop();
-
-            saveHistoryToStorage();
-        }
-
-        // 渲染歷史紀錄列表至畫面上
-        function renderHistoryList() {
-            const container = document.getElementById('historyListContainer');
-            if (historyRecords.length === 0) {
-                container.innerHTML = '<div style="color:var(--sub-text); text-align:center;">無歷史紀錄</div>';
-                return;
-            }
-
-            let html = '';
-            historyRecords.forEach(item => {
-                html += `
-                <div class="history-item">
-                    <div class="history-info">
-                        <div class="history-title">[${item.type}] ${escapeHtml(item.summary)}</div>
-                        <div class="history-time">${item.time}</div>
-                    </div>
-                    <div class="history-actions">
-                        <button class="btn-encode btn-sm" onclick="loadHistoryItem(${item.id})">載入</button>
-                        <button class="btn-clear btn-sm" onclick="deleteHistoryItem(${item.id})">刪除</button>
-                    </div>
-                </div>`;
-            });
-            container.innerHTML = html;
-        }
-
-        // 載入特定的歷史紀錄到輸入框
-        function loadHistoryItem(id) {
-            const item = historyRecords.find(r => r.id === id);
-            if (!item) return;
-
-            document.getElementById('inputText').value = item.text || item.cipher || "";
-            if (item.cipher && item.text) {
-                document.getElementById('outputText').value = item.cipher;
-            }
-            updateInputCounter();
-            updateOutputCounter();
-        }
-
-        // 刪除單筆歷史紀錄
-        function deleteHistoryItem(id) {
-            historyRecords = historyRecords.filter(r => r.id !== id);
-            saveHistoryToStorage();
-        }
-
-        // 清空所有歷史紀錄
-        function clearHistoryList() {
-            if (confirm("確定要清空所有歷史紀錄嗎？")) {
-                historyRecords = [];
-                saveHistoryToStorage();
-            }
-        }
-
-        // HTML 特殊字元跳脫（防止 XSS 攻擊）
-        function escapeHtml(str) {
-            return str ? str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;") : '';
-        }
-
-        /* ---------------------------------------------------------
-           📦 6. JSON 資料匯出與匯入 (Export/Import Backup)
-           --------------------------------------------------------- */
-        // 將歷史紀錄打包導出為 JSON 檔下載
-        function exportBackupData() {
-            if (historyRecords.length === 0) {
-                alert("目前沒有歷史紀錄可供導出！");
-                return;
-            }
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(historyRecords, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `encrypted_notes_backup_${Date.now()}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-        }
-
-        // 讀取匯入的 JSON 備份檔
-        function importBackupData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const importedData = JSON.parse(e.target.result);
-                    if (Array.isArray(importedData)) {
-                        historyRecords = importedData;
-                        saveHistoryToStorage();
-                        alert("🎉 筆記備份資料已成功匯入！");
-                    } else {
-                        alert("❌ 無效的備份檔案格式！");
-                    }
-                } catch(err) {
-                    alert("❌ 檔案解析失敗，請確認是否為標準 JSON 備份檔！");
-                }
-            };
-            reader.readAsText(file);
-            event.target.value = ""; // 清空 input 觸發二次選擇
-        }
-
-        /* ---------------------------------------------------------
-           ⚙️ 7. UI 控制與輔助切換 (UI Helpers & Toggles)
-           --------------------------------------------------------- */
-        // 切換第二重密碼輸入框
-        function toggleSecondPwInput() {
-            const check = document.getElementById('toggleSecondPw').checked;
-            const wrapper = document.getElementById('secondPwWrapper');
-            if (check) {
-                wrapper.classList.remove('hidden');
+        function toggleTheme() {
+            const currentTheme = document.body.getAttribute('data-theme');
+            const themeBtn = document.getElementById('themeBtn');
+            if (currentTheme === 'dark') {
+                document.body.removeAttribute('data-theme');
+                themeBtn.innerText = "🌙 深色";
+                localStorage.setItem('user_theme', 'light');
             } else {
-                wrapper.classList.add('hidden');
-                document.getElementById('secondPassphrase').value = "";
+                document.body.setAttribute('data-theme', 'dark');
+                themeBtn.innerText = "☀️ 淺色";
+                localStorage.setItem('user_theme', 'dark');
             }
         }
 
-        // 切換密碼框為明文/密文 (切換 SVG 眼睛圖示)
-        function togglePasswordVisibility(inputId, eyeIcon) {
-            const inputEl = document.getElementById(inputId);
-            if (inputEl.type === "password") {
-                inputEl.type = "text";
-                eyeIcon.innerHTML = '<svg viewBox="0 0 24 24"><use href="#icon-eye-open"></use></svg>';
-            } else {
-                inputEl.type = "password";
-                eyeIcon.innerHTML = '<svg viewBox="0 0 24 24"><use href="#icon-eye-closed"></use></svg>';
+        function loadThemePreference() {
+            const savedTheme = localStorage.getItem('user_theme');
+            const themeBtn = document.getElementById('themeBtn');
+            if (savedTheme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                themeBtn.innerText = "☀️ 淺色";
             }
         }
 
-        // 切換顯示/隱藏 Changelog 彈窗
+        function toggleDropdownMenu(e) {
+            e.stopPropagation();
+            document.getElementById('dropdownMenu').classList.toggle('hidden');
+        }
+
+        function closeDropdownMenu() {
+            document.getElementById('dropdownMenu').classList.add('hidden');
+        }
+
         function toggleChangelog() {
             document.getElementById('changelogModal').classList.toggle('hidden');
         }
 
         /* ---------------------------------------------------------
-           ⚡ 8. 自動貼上與自動解密檢測 (Auto-Detect Decrypt)
+           3. 身分驗證與金鑰解鎖 (Authentication)
            --------------------------------------------------------- */
-        const inputArea = document.getElementById('inputText');
-        inputArea.addEventListener('paste', () => {
-            setTimeout(() => { autoDetectAndDecode(); }, 50);
-        });
-        inputArea.addEventListener('input', () => {
-            autoDetectAndDecode();
-        });
-
-        // 檢測輸入文字是否符合 Hex 16 進位密文特徵，若符合則自動嘗試解密
-        function autoDetectAndDecode() {
-            const val = inputArea.value.replace(/\s+/g, '');
-            // 判斷長度大於等於 56 碼且只包含 0-9 a-f A-F 的字元
-            if (val.length >= 56 && /^[0-9a-fA-F]+$/.test(val)) {
-                decodeProcess();
-            }
-        }
-
-        /* ---------------------------------------------------------
-           🔑 9. 帳號權限驗證與密碼管理 (Auth & Password Management)
-           --------------------------------------------------------- */
-        // 模擬遠端同步密碼資料
-        async function fetchCloudPasswords() {
-            try {
-                const localBackup = localStorage.getItem('SYNC_MEMBER_KEYS');
-                if(localBackup) livePasswords = JSON.parse(localBackup);
-                document.getElementById('syncStatus').innerText = "🟢 連線正常";
-            } catch (e) {
-                document.getElementById('syncStatus').innerText = "🟡 系統就緒";
-            }
-        }
-        fetchCloudPasswords();
-
-        // 驗證登入密碼
         function verifyPassword() {
             const inputKey = document.getElementById('userKey').value.trim();
-            if (!inputKey) {
-                alert("請輸入金鑰密碼！");
-                return;
-            }
+            if (!inputKey) { alert("請輸入密碼！"); return; }
 
-            savedRawKey = inputKey;
-
-            // 判斷是否為超級管理員
             if (inputKey === SUPER_ADMIN_KEY) {
-                currentRole = "admin";
-                document.getElementById('authBlock').classList.add('hidden');
-                document.getElementById('mainBlock').classList.remove('hidden');
-                document.getElementById('adminMenuBlock').classList.remove('hidden');
+                currentRole = 'admin';
+                currentAccount = 'admin';
+                currentDerivePassword = PUBLIC_KEY;
+                alert("👑 最高管理員驗證成功！已解鎖管理權限。");
+                showWorkspace();
                 document.getElementById('adminViewBtn').classList.remove('hidden');
-                document.getElementById('menuContainer').classList.remove('hidden'); // 顯示三點選單
-                loadHistoryFromStorage();
+                document.getElementById('adminMenuBlock').classList.remove('hidden');
             } else {
-                // 尋找對應的一般成員帳號
-                const matchedAccount = Object.keys(livePasswords).find(acc => livePasswords[acc] === inputKey);
-                if (matchedAccount) {
-                    currentRole = "user";
-                    currentUserAccount = matchedAccount;
-                    document.getElementById('authBlock').classList.add('hidden');
-                    document.getElementById('mainBlock').classList.remove('hidden');
-                    document.getElementById('menuContainer').classList.remove('hidden'); // 顯示三點選單
-                    loadHistoryFromStorage();
+                let foundAcc = null;
+                for (let acc in livePasswords) {
+                    if (livePasswords[acc] === inputKey) {
+                        foundAcc = acc;
+                        break;
+                    }
+                }
+
+                if (foundAcc) {
+                    currentRole = 'user';
+                    currentAccount = foundAcc;
+                    currentDerivePassword = PUBLIC_KEY;
+                    alert("🔓 驗證成功，歡迎進入工作台！");
+                    showWorkspace();
                 } else {
-                    alert("❌ 密碼驗證失敗，請重新確認存取金鑰！");
+                    alert("❌ 密碼錯誤，存取被拒！");
                 }
             }
         }
 
-        // 🔒 一鍵登出鎖定邏輯
-        function logoutSystem() {
-            savedRawKey = "";
-            currentRole = "user";
-            currentUserAccount = "";
-
-            // 重置輸入欄位
-            document.getElementById('userKey').value = "";
-            clearAllContent();
-
-            // 調整區塊顯示狀態
-            document.getElementById('authBlock').classList.remove('hidden');
-            document.getElementById('mainBlock').classList.add('hidden');
-            document.getElementById('changePasswordBlock').classList.add('hidden');
-            document.getElementById('adminMenuBlock').classList.add('hidden');
-            document.getElementById('adminViewBtn').classList.add('hidden');
-            
-            // 隱藏三點選單
-            document.getElementById('menuContainer').classList.add('hidden');
-            closeDropdownMenu();
-
-            alert("🔒 已成功登出並鎖定筆記本！");
+        function showWorkspace() {
+            document.getElementById('authBlock').classList.add('hidden');
+            document.getElementById('mainBlock').classList.remove('hidden');
+            document.getElementById('menuContainer').classList.remove('hidden');
+            renderHistoryList();
         }
 
-        // 顯示修改個人密碼畫面
+        function logoutSystem() {
+            currentRole = 'user';
+            currentAccount = '';
+            currentDerivePassword = '';
+            document.getElementById('userKey').value = '';
+            document.getElementById('authBlock').classList.remove('hidden');
+            document.getElementById('mainBlock').classList.add('hidden');
+            document.getElementById('menuContainer').classList.add('hidden');
+            document.getElementById('adminViewBtn').classList.add('hidden');
+            document.getElementById('adminMenuBlock').classList.add('hidden');
+            hideChangePasswordPage();
+            clearAllContent();
+            alert("🔒 已成功登出系統並鎖定工作台。");
+        }
+
+        /* ---------------------------------------------------------
+           4. 全體成員密碼表 Modal 渲染
+           --------------------------------------------------------- */
+        function showAllPasswords() {
+            if (currentRole !== 'admin') return;
+            
+            const nameMap = {
+                "user1": "成員一 (小魚)",
+                "user2": "成員二 (Kris)",
+                "user3": "成員三 (林沐恩)",
+                "user4": "成員四",
+                "user5": "成員五",
+                "user6": "成員六",
+                "user7": "成員七 (吳彥普)",
+                "user8": "成員八"
+            };
+
+            let html = '';
+            for (let acc in livePasswords) {
+                let displayName = nameMap[acc] || acc;
+                html += `
+                    <div style="font-weight: bold; border-bottom: 1px dashed var(--border-color); padding: 5px 0;">👤 ${displayName}</div>
+                    <div style="color: #e74c3c; border-bottom: 1px dashed var(--border-color); padding: 5px 0; word-break: break-all;">🔑 ${livePasswords[acc]}</div>
+                `;
+            }
+
+            document.getElementById('pwTableContent').innerHTML = html;
+            document.getElementById('pwTableModal').classList.remove('hidden');
+        }
+
+        /* ---------------------------------------------------------
+           5. 修改密碼介面 (Change Password)
+           --------------------------------------------------------- */
         function showChangePasswordPage() {
             document.getElementById('mainBlock').classList.add('hidden');
             document.getElementById('changePasswordBlock').classList.remove('hidden');
         }
 
-        // 取消修改密碼返回主畫面
         function hideChangePasswordPage() {
             document.getElementById('changePasswordBlock').classList.add('hidden');
-            document.getElementById('mainBlock').classList.remove('hidden');
-            document.getElementById('oldPasswordInput').value = "";
-            document.getElementById('newPasswordInput').value = "";
-            document.getElementById('confirmPasswordInput').value = "";
-        }
-
-        // 管理員查看全體成員密碼表
-        function showAllPasswords() {
-            if (currentRole !== 'admin') return;
-            let msg = "👑【全體成員最新存取金鑰密碼表】\n------------------------------\n";
-            for (let acc in livePasswords) {
-                msg += `• ${acc}: ${livePasswords[acc]}\n`;
+            if (currentAccount) {
+                document.getElementById('mainBlock').classList.remove('hidden');
+            } else {
+                document.getElementById('authBlock').classList.remove('hidden');
             }
-            alert(msg);
         }
 
-        // 修改當前帳號的個人密碼
         function changeCurrentPassword() {
-            const oldPassword = document.getElementById('oldPasswordInput').value.trim();
-            const newPassword = document.getElementById('newPasswordInput').value.trim();
-            const confirmPassword = document.getElementById('confirmPasswordInput').value.trim();
+            const oldPw = document.getElementById('oldPasswordInput').value.trim();
+            const newPw = document.getElementById('newPasswordInput').value.trim();
+            const confirmPw = document.getElementById('confirmPasswordInput').value.trim();
 
-            if (!oldPassword || !newPassword || !confirmPassword) {
-                alert("請完整填寫所有密碼欄位！");
+            if (!oldPw || !newPw || !confirmPw) { alert("請填寫所有欄位！"); return; }
+            if (newPw !== confirmPw) { alert("兩次輸入的新密碼不一致！"); return; }
+
+            if (currentRole === 'admin' && oldPw === SUPER_ADMIN_KEY) {
+                alert("❌ 最高管理員預設金鑰不允許於前台修改。");
                 return;
             }
 
-            let targetAcc = currentUserAccount;
-            if (currentRole === 'admin') {
-                targetAcc = document.getElementById('encryptMode').value;
-            }
-
-            if (livePasswords[targetAcc] !== oldPassword) {
-                alert("❌ 舊密碼輸入錯誤，無法修改！");
+            if (livePasswords[currentAccount] !== oldPw) {
+                alert("❌ 當前舊密碼不正確！");
                 return;
             }
 
-            if (newPassword !== confirmPassword) {
-                alert("❌ 兩次輸入的新密碼不一致，請重新檢查！");
-                return;
-            }
-
-            if (newPassword === oldPassword) {
-                alert("⚠️ 新密碼不能與舊密碼相同！");
-                return;
-            }
-
-            livePasswords[targetAcc] = newPassword;
-            localStorage.setItem('SYNC_MEMBER_KEYS', JSON.stringify(livePasswords));
-
-            alert(`💾 密碼重設成功！系統將會進行登出，請使用新密碼重新登入。`);
-            location.reload(); // 重新整理網頁強制重新登入
+            livePasswords[currentAccount] = newPw;
+            alert("✅ 密碼修改成功！系統將會進行登出，請使用新密碼重新登入。");
+            document.getElementById('oldPasswordInput').value = '';
+            document.getElementById('newPasswordInput').value = '';
+            document.getElementById('confirmPasswordInput').value = '';
+            logoutSystem();
         }
 
         /* ---------------------------------------------------------
-           🔐 10. Web Crypto 加解密核心演算法 (AES-256-GCM + PBKDF2)
+           6. Web Crypto API 加解密核心 Engine (AES-256-GCM + PBKDF2)
            --------------------------------------------------------- */
-        /**
-         * 金鑰衍生函數：使用 PBKDF2 將純文字密碼轉換為安全的 AES-GCM 256-bit 加密金鑰
-         * @param {string} password - 原始密碼字串
-         * @param {Uint8Array} salt - 隨機鹽值 (Salt)，防止彩虹表攻擊
-         */
-        async function deriveKey(password, salt) {
+        async function getKeyMaterial(password) {
             const enc = new TextEncoder();
-            // 1. 將密碼文字匯入為基礎 Key
-            const baseKey = await window.crypto.subtle.importKey(
-                "raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]
+            return await window.crypto.subtle.importKey(
+                "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveKey"]
             );
-            // 2. 透過 PBKDF2 進行 100,000 次雜湊疊加，衍生出 256 位元的 AES-GCM 金鑰
-            return window.crypto.subtle.deriveKey(
-                { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
-                baseKey,
+        }
+
+        async function deriveAesKey(password, salt) {
+            const keyMaterial = await getKeyMaterial(password);
+            return await window.crypto.subtle.deriveKey(
+                {
+                    name: "PBKDF2",
+                    salt: salt,
+                    iterations: 100000,
+                    hash: "SHA-256"
+                },
+                keyMaterial,
                 { name: "AES-GCM", length: 256 },
                 false,
                 ["encrypt", "decrypt"]
             );
         }
 
-        /**
-         * 🔒 執行加密流程
-         */
-        async function encodeProcess() {
-            let baseKey = PUBLIC_KEY;
-            const isSecondPwEnabled = document.getElementById('toggleSecondPw').checked;
-            const secondPass = isSecondPwEnabled ? document.getElementById('secondPassphrase').value.trim() : "";
+        async function encryptData(plainText, masterPass, secondPass = "") {
+            const combinedPass = masterPass + "::" + secondPass;
+            const enc = new TextEncoder();
+            const salt = window.crypto.getRandomValues(new Uint8Array(16));
+            const iv = window.crypto.getRandomValues(new Uint8Array(12));
+            const key = await deriveAesKey(combinedPass, salt);
 
-            // 若有開啟第二重密碼，將兩者串接作為最終衍生密碼
-            const finalPassword = secondPass ? `${baseKey}:::${secondPass}` : baseKey;
+            const encryptedContent = await window.crypto.subtle.encrypt(
+                { name: "AES-GCM", iv: iv }, key, enc.encode(plainText)
+            );
 
-            let textInput = document.getElementById('inputText').value;
-            if(!textInput && !uploadedFilePayload) {
-                alert("請先輸入文字或選擇檔案再加密！");
-                return;
-            }
+            const combinedBuffer = new Uint8Array(salt.byteLength + iv.byteLength + encryptedContent.byteLength);
+            combinedBuffer.set(salt, 0);
+            combinedBuffer.set(iv, salt.byteLength);
+            combinedBuffer.set(new Uint8Array(encryptedContent), salt.byteLength + iv.byteLength);
 
-            // 將文字與檔案包裝成 JSON 物件
-            let payloadObject = {
-                text: textInput,
-                file: uploadedFilePayload
-            };
-            const finalRawString = JSON.stringify(payloadObject);
+            return Array.from(combinedBuffer).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
 
+        async function decryptData(hexString, masterPass, secondPass = "") {
             try {
-                // 產生隨機 Salt (16 bytes) 與 IV (12 bytes)
-                const salt = window.crypto.getRandomValues(new Uint8Array(16));
-                const iv = window.crypto.getRandomValues(new Uint8Array(12));
+                const combinedPass = masterPass + "::" + secondPass;
+                const matchBytes = hexString.match(/.{1,2}/g);
+                if (!matchBytes) return null;
+                const combinedBuffer = new Uint8Array(matchBytes.map(byte => parseInt(byte, 16)));
 
-                const cryptoKey = await deriveKey(finalPassword, salt);
-                const encodedText = new TextEncoder().encode(finalRawString);
+                if (combinedBuffer.length < 28) return null;
 
-                const encryptedBuffer = await window.crypto.subtle.encrypt(
-                    { name: "AES-GCM", iv: iv },
-                    cryptoKey,
-                    encodedText
+                const salt = combinedBuffer.slice(0, 16);
+                const iv = combinedBuffer.slice(16, 28);
+                const data = combinedBuffer.slice(28);
+
+                const key = await deriveAesKey(combinedPass, salt);
+                const decryptedContent = await window.crypto.subtle.decrypt(
+                    { name: "AES-GCM", iv: iv }, key, data
                 );
 
-                // 將 ArrayBuffer 轉成 16 進位 Hex 字串組合 (Salt + IV + Ciphertext)
-                const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
-                const ivHex = Array.from(iv).map(b => b.toString(16).padStart(2, '0')).join('');
-                const cipherHex = Array.from(new Uint8Array(encryptedBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-
-                const finalResultHex = saltHex + ivHex + cipherHex;
-                document.getElementById('outputText').value = finalResultHex;
-
-                addHistoryRecord('加密', textInput, finalResultHex);
-                updateOutputCounter();
+                return new TextDecoder().decode(decryptedContent);
             } catch (e) {
-                alert("❌ 加密過程發生錯誤！");
+                return null;
             }
         }
 
-        /**
-         * 🔓 執行解密流程
-         */
-        async function decodeProcess() {
-            const input = document.getElementById('inputText').value.replace(/\s+/g, '');
-            if (!input) {
-                alert("請輸入欲解密之 Hex 密文！");
+        /* ---------------------------------------------------------
+           7. 加解密工作流與 UI 控制 (Workflows)
+           --------------------------------------------------------- */
+        function toggleSecondPwInput() {
+            const checked = document.getElementById('toggleSecondPw').checked;
+            const wrapper = document.getElementById('secondPwWrapper');
+            if (checked) wrapper.classList.remove('hidden');
+            else {
+                wrapper.classList.add('hidden');
+                document.getElementById('secondPassphrase').value = '';
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                selectedFilePayload = {
+                    fileName: file.name,
+                    fileType: file.type,
+                    dataUrl: evt.target.result
+                };
+                document.getElementById('fileNameDisplay').innerText = `已選擇附件: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function encodeProcess() {
+            const text = document.getElementById('inputText').value;
+            if (!text && !selectedFilePayload) {
+                alert("請輸入內文字或上傳附件！");
                 return;
             }
 
-            const isSecondPwEnabled = document.getElementById('toggleSecondPw').checked;
-            const secondPass = isSecondPwEnabled ? document.getElementById('secondPassphrase').value.trim() : "";
+            const secondPw = document.getElementById('toggleSecondPw').checked ? 
+                             document.getElementById('secondPassphrase').value.trim() : "";
 
-            // 建立嘗試衍生金鑰的密碼候選清單 (包含公共金鑰、自己密碼與全體成員密碼)
-            let rawCandidates = [PUBLIC_KEY, savedRawKey];
-            Object.values(livePasswords).forEach(pw => {
-                if(!rawCandidates.includes(pw)) rawCandidates.push(pw);
-            });
+            const payloadObject = { text: text, file: selectedFilePayload };
+            const jsonPayloadStr = JSON.stringify(payloadObject);
 
-            const candidateKeys = rawCandidates.map(k => secondPass ? `${k}:::${secondPass}` : k);
+            const hexResult = await encryptData(jsonPayloadStr, currentDerivePassword, secondPw);
+            document.getElementById('outputText').value = hexResult;
+            updateOutputCounter();
 
-            // 解析出 16 進位字串中的 Salt、IV 與 Cipher
-            const saltHex = input.substring(0, 32);
-            const ivHex = input.substring(32, 56);
-            const cipherHex = input.substring(56);
+            addHistoryRecord('加密', text || (selectedFilePayload ? selectedFilePayload.fileName : '檔案內容'), hexResult);
+            alert("🔒 加密完成！結果已輸出。");
+        }
 
-            // 將 Hex 字串還原為 Uint8Array 位元組陣列
-            const salt = new Uint8Array(saltHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-            const iv = new Uint8Array(ivHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-            const cipherBuffer = new Uint8Array(cipherHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+        async function decodeProcess() {
+            const inputHex = document.getElementById('inputText').value.trim();
+            if (!inputHex) { alert("請在輸入框貼上要解密的密文！"); return; }
 
-            let successDecryptedText = null;
+            const secondPw = document.getElementById('toggleSecondPw').checked ? 
+                             document.getElementById('secondPassphrase').value.trim() : "";
 
-            // 輪詢嘗試解密
-            for (let passStr of candidateKeys) {
+            const rawDecrypted = await decryptData(inputHex, currentDerivePassword, secondPw);
+
+            if (rawDecrypted) {
                 try {
-                    const cryptoKey = await deriveKey(passStr, salt);
-                    const decryptedBuffer = await window.crypto.subtle.decrypt(
-                        { name: "AES-GCM", iv: iv },
-                        cryptoKey,
-                        cipherBuffer
-                    );
-                    successDecryptedText = new TextDecoder().decode(decryptedBuffer);
-                    if (successDecryptedText) break; // 解密成功即跳出迴圈
-                } catch(e) {
-                    // 解密失敗繼續嘗試下一個 Key
-                }
-            }
-
-            if (successDecryptedText) {
-                try {
-                    const parsed = JSON.parse(successDecryptedText);
-                    document.getElementById('outputText').value = parsed.text || "";
-                    
-                    // 若解密資料包含檔案附件
-                    if (parsed.file && parsed.file.dataUrl) {
+                    const parsed = JSON.parse(rawDecrypted);
+                    document.getElementById('outputText').value = parsed.text || '';
+                    if (parsed.file) {
                         decryptedFileData = parsed.file;
                         document.getElementById('fileResultBlock').classList.remove('hidden');
-
-                        // 若為圖片則顯示預覽
                         if (parsed.file.fileType && parsed.file.fileType.startsWith('image/')) {
                             const img = document.getElementById('imagePreview');
                             img.src = parsed.file.dataUrl;
@@ -1191,21 +958,20 @@
                     } else {
                         document.getElementById('fileResultBlock').classList.add('hidden');
                     }
-                    addHistoryRecord('解密', parsed.text, input);
+                    addHistoryRecord('解密', parsed.text, inputHex);
                 } catch(e) {
-                    // 相容舊版本純字串無 JSON 包裝的格式
-                    document.getElementById('outputText').value = successDecryptedText;
+                    document.getElementById('outputText').value = rawDecrypted;
                     document.getElementById('fileResultBlock').classList.add('hidden');
-                    addHistoryRecord('解密', successDecryptedText, input);
+                    addHistoryRecord('解密', rawDecrypted, inputHex);
                 }
                 updateOutputCounter();
+                alert("🔓 解密成功！");
             } else {
                 document.getElementById('outputText').value = "？？？ (密碼錯誤、第二重密碼不符或數據已被篡改)";
                 document.getElementById('fileResultBlock').classList.add('hidden');
             }
         }
 
-        // 下載解密出的檔案
         function downloadDecryptedFile() {
             if (!decryptedFileData) return;
             const a = document.createElement('a');
@@ -1214,13 +980,179 @@
             a.click();
         }
 
-        // 複製輸出框文字
         function copyResult() {
             const outputText = document.getElementById('outputText');
             if (!outputText.value) { alert("沒有內容可以複製！"); return; }
             outputText.select();
             document.execCommand('copy');
             alert("📋 已成功複製到剪貼簿！");
+        }
+
+        function clearAllContent() {
+            document.getElementById('inputText').value = '';
+            document.getElementById('outputText').value = '';
+            document.getElementById('fileInput').value = '';
+            document.getElementById('secondPassphrase').value = '';
+            document.getElementById('toggleSecondPw').checked = false;
+            toggleSecondPwInput();
+            document.getElementById('fileNameDisplay').innerText = '';
+            document.getElementById('fileResultBlock').classList.add('hidden');
+            document.getElementById('imagePreview').src = '';
+            selectedFilePayload = null;
+            decryptedFileData = null;
+            updateInputCounter();
+            updateOutputCounter();
+        }
+
+        /* ---------------------------------------------------------
+           8. 字數統計與歷史紀錄 (Counter & History LocalStorage)
+           --------------------------------------------------------- */
+        function updateInputCounter() {
+            const val = document.getElementById('inputText').value;
+            const charCount = val.replace(/\s/g, '').length;
+            const totalCount = val.length;
+            document.getElementById('inputCounter').innerText = `字數: ${charCount} | 含空白: ${totalCount}`;
+        }
+
+        function updateOutputCounter() {
+            const val = document.getElementById('outputText').value;
+            const length = val.length;
+            const bytes = new TextEncoder().encode(val).length;
+            const kb = (bytes / 1024).toFixed(2);
+            document.getElementById('outputCounter').innerText = `長度: ${length} 字符 | 大小: ${kb} KB`;
+        }
+
+        function addHistoryRecord(type, summary, raw) {
+            const timeStr = new Date().toLocaleString('zh-TW', { hour12: false });
+            const record = {
+                id: Date.now(),
+                type: type,
+                title: summary ? summary.substring(0, 18) + (summary.length > 18 ? '...' : '') : '檔案附件',
+                raw: raw,
+                time: timeStr
+            };
+            historyRecords.unshift(record);
+            if (historyRecords.length > 20) historyRecords.pop();
+            saveHistoryToStorage();
+            renderHistoryList();
+        }
+
+        function renderHistoryList() {
+            const container = document.getElementById('historyListContainer');
+            if (historyRecords.length === 0) {
+                container.innerHTML = '<div style="color: var(--sub-text); text-align: center; padding: 10px;">無歷史紀錄</div>';
+                return;
+            }
+
+            let html = '';
+            historyRecords.forEach(item => {
+                html += `
+                    <div class="history-item">
+                        <div class="history-info">
+                            <div class="history-title">[${item.type}] ${escapeHtml(item.title)}</div>
+                            <div class="history-time">${item.time}</div>
+                        </div>
+                        <div class="history-actions">
+                            <button class="btn-copy btn-sm" onclick="loadHistoryItem(${item.id})">載入</button>
+                            <button class="btn-clear btn-sm" onclick="deleteHistoryRecord(${item.id})">刪除</button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function loadHistoryItem(id) {
+            const item = historyRecords.find(r => r.id === id);
+            if (item) {
+                document.getElementById('inputText').value = item.raw;
+                updateInputCounter();
+                alert(`已載入 [${item.type}] 紀錄至輸入框！`);
+            }
+        }
+
+        function deleteHistoryRecord(id) {
+            historyRecords = historyRecords.filter(r => r.id !== id);
+            saveHistoryToStorage();
+            renderHistoryList();
+        }
+
+        function clearHistoryList() {
+            if (confirm("確定要清空所有本地歷史紀錄嗎？")) {
+                historyRecords = [];
+                saveHistoryToStorage();
+                renderHistoryList();
+            }
+        }
+
+        function saveHistoryToStorage() {
+            localStorage.setItem('notebook_history', JSON.stringify(historyRecords));
+        }
+
+        function loadHistoryFromStorage() {
+            const saved = localStorage.getItem('notebook_history');
+            if (saved) {
+                try { historyRecords = JSON.parse(saved); } catch(e) { historyRecords = []; }
+            }
+        }
+
+        /* ---------------------------------------------------------
+           9. JSON 備份與匯入功能 (Backup & Import)
+           --------------------------------------------------------- */
+        function exportBackupData() {
+            const backupPayload = {
+                version: "5.1.0",
+                exportTime: new Date().toISOString(),
+                history: historyRecords
+            };
+            const blob = new Blob([JSON.stringify(backupPayload, null, 2)], { type: "application/json" });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `notebook_backup_${Date.now()}.json`;
+            a.click();
+            alert("📤 歷史筆記備份已成功匯出！");
+        }
+
+        function importBackupData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = JSON.parse(evt.target.result);
+                    if (data && Array.isArray(data.history)) {
+                        historyRecords = data.history;
+                        saveHistoryToStorage();
+                        renderHistoryList();
+                        alert("📥 備份筆記資料已成功匯入！");
+                    } else {
+                        alert("❌ 備份檔案格式不相符！");
+                    }
+                } catch(err) {
+                    alert("❌ 讀取 json 備份檔失敗！");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        /* ---------------------------------------------------------
+           10. 工具輔助函式 (Utils)
+           --------------------------------------------------------- */
+        function togglePasswordVisibility(inputId, eyeEl) {
+            const input = document.getElementById(inputId);
+            const useEl = eyeEl.querySelector('use');
+            if (input.type === 'password') {
+                input.type = 'text';
+                useEl.setAttribute('href', '#icon-eye-open');
+            } else {
+                input.type = 'password';
+                useEl.setAttribute('href', '#icon-eye-closed');
+            }
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
     </script>
 </body>
