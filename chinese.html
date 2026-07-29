@@ -929,8 +929,7 @@
             updateOutputCounter();
 
             addHistoryRecord('加密', text || (selectedFilePayload ? selectedFilePayload.fileName : '檔案內容'), hexResult);
-            alert("🔒 加密完成！結果已輸出。");
-        }
+            }
 
         async function decodeProcess() {
             const inputHex = document.getElementById('inputText').value.trim();
