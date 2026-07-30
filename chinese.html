@@ -693,7 +693,6 @@
                 currentRole = 'admin';
                 currentAccount = 'admin';
                 currentDerivePassword = PUBLIC_KEY;
-                alert("👑驗證成功！");
                 showWorkspace();
                 document.getElementById('adminViewBtn').classList.remove('hidden');
                 document.getElementById('adminMenuBlock').classList.remove('hidden');
@@ -709,8 +708,7 @@
                 if (foundAcc) {
                     currentRole = 'user';
                     currentAccount = foundAcc;
-                    currentDerivePassword = PUBLIC_KEY;
-                    alert("🔓 驗證成功");
+                    currentDerivePassword = PUBLIC_KEY;                    
                     showWorkspace();
                 } else {
                     alert("❌ 密碼錯誤，存取被拒！");
@@ -737,7 +735,7 @@
             document.getElementById('adminMenuBlock').classList.add('hidden');
             hideChangePasswordPage();
             clearAllContent();
-            alert("🔒 已成功登出系統並鎖定工作台。");
+            alert("🔒 已成功登出系統");
         }
 
         /* ---------------------------------------------------------
@@ -964,7 +962,6 @@
                     addHistoryRecord('解密', rawDecrypted, inputHex);
                 }
                 updateOutputCounter();
-                alert("🔓 解密成功！");
             } else {
                 document.getElementById('outputText').value = "？？？ (密碼錯誤、第二重密碼不符或數據已被篡改)";
                 document.getElementById('fileResultBlock').classList.add('hidden');
